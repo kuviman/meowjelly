@@ -5,6 +5,7 @@ mod config;
 mod ctx;
 mod game_state;
 mod render;
+mod controls;
 
 use ctx::Ctx;
 

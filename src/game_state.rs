@@ -2,7 +2,8 @@ use super::*;
 
 struct Player {
     pos: vec3<f32>,
-    fall_speed: f32,
+    radius: f32,
+    vel: vec3<f32>,
 }
 
 struct Camera {
@@ -51,7 +52,8 @@ impl GameState {
             },
             player: Some(Player {
                 pos: vec3::ZERO,
-                fall_speed: 0.0,
+                vel: vec3::ZERO,
+                radius: ctx.config.player.radius,
             }),
             transition: None,
             walls: Vec::new(),
@@ -59,14 +61,11 @@ impl GameState {
     }
 
     fn key_press(&mut self, key: geng::Key) {
-        match key {
-            geng::Key::Escape => {
-                self.transition = Some(geng::state::Transition::Pop);
-            }
-            geng::Key::R => {
-                *self = Self::new(&self.ctx);
-            }
-            _ => {}
+        if self.ctx.controls.quit.contains(&key) {
+            self.transition = Some(geng::state::Transition::Pop);
+        }
+        if self.ctx.controls.restart.contains(&key) {
+            *self = Self::new(&self.ctx);
         }
     }
 }
@@ -91,17 +90,43 @@ impl geng::State for GameState {
                 self.ctx.config.tube_radius,
             );
         }
+        if let Some(player) = &self.player {
+            self.ctx.render.sprite(
+                framebuffer,
+                &self.camera,
+                &self.ctx.assets.player.head,
+                mat4::translate(player.pos) * mat4::scale_uniform(player.radius),
+            );
+        }
     }
     fn update(&mut self, delta_time: f64) {
         let delta_time = delta_time as f32;
         if let Some(player) = &mut self.player {
-            player.fall_speed = (player.fall_speed + self.ctx.config.acceleration * delta_time)
-                .min(self.ctx.config.fall_speed);
-            player.pos.z -= player.fall_speed * delta_time;
+            let mut target_vel = vec2::ZERO;
+            let mut control = |keys: &[geng::Key], x: f32, y: f32| {
+                if keys
+                    .iter()
+                    .any(|key| self.ctx.geng.window().pressed_keys().contains(key))
+                {
+                    target_vel += vec2(x, y);
+                }
+            };
+            control(&self.ctx.controls.player.up, 0.0, 1.0);
+            control(&self.ctx.controls.player.left, -1.0, 0.0);
+            control(&self.ctx.controls.player.down, 0.0, -1.0);
+            control(&self.ctx.controls.player.right, 1.0, 0.0);
+            let target_vel = target_vel.clamp_len(..=1.0) * self.ctx.config.player.speed;
+            player.vel += (target_vel - player.vel.xy())
+                .clamp_len(..=self.ctx.config.player.acceleration * delta_time)
+                .extend(0.0);
 
-            self.camera.pos = player.pos;
-            self.camera.pos.z += self.ctx.config.camera.distance;
-            self.camera.vel = vec2::ZERO.extend(-player.fall_speed);
+            player.vel.z = (player.vel.z - self.ctx.config.player.fall_acceleration * delta_time)
+                .min(self.ctx.config.player.fall_speed);
+            player.pos += player.vel * delta_time;
+
+            self.camera.pos = (player.pos.xy() * self.ctx.config.camera.horizontal_movement)
+                .extend(player.pos.z + self.ctx.config.camera.distance);
+            self.camera.vel = player.vel;
         } else {
             self.camera.pos += self.camera.vel * delta_time;
             self.camera.vel -= self

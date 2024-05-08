@@ -8,6 +8,7 @@ pub struct Vertex {
 
 pub struct Render {
     cylinder: ugli::VertexBuffer<Vertex>,
+    quad: ugli::VertexBuffer<Vertex>,
     assets: Assets,
     pub config: Config,
 }
@@ -56,11 +57,54 @@ impl Render {
                 })
                 .collect(),
         );
+        let quad = ugli::VertexBuffer::new_static(
+            geng.ugli(),
+            [(0, 0), (0, 1), (1, 1), (1, 0)]
+                .into_iter()
+                .map(|(x, y)| Vertex {
+                    a_pos: vec2(x, y).map(|x| x as f32 * 2.0 - 1.0).extend(0.0),
+                    a_uv: vec2(x, y).map(|x| x as f32),
+                })
+                .collect(),
+        );
         Self {
             cylinder,
+            quad,
             assets,
             config,
         }
+    }
+
+    pub fn sprite(
+        &self,
+        framebuffer: &mut ugli::Framebuffer,
+        camera: &dyn AbstractCamera3d,
+        texture: &ugli::Texture,
+        matrix: mat4<f32>,
+    ) {
+        let framebuffer_size = framebuffer.size().map(|x| x as f32);
+        ugli::draw(
+            framebuffer,
+            &self.assets.shaders.texture,
+            ugli::DrawMode::TriangleFan,
+            &self.quad,
+            (
+                ugli::uniforms! {
+                    u_texture: texture,
+                    u_texture_size: texture.size(),
+                    u_model_matrix: matrix,
+                    u_uv_matrix: mat3::identity(),
+                    u_fog_color: self.config.fog_color,
+                    u_fog_distance: self.config.fog_distance,
+                },
+                camera.uniforms(framebuffer_size),
+            ),
+            ugli::DrawParameters {
+                blend_mode: Some(ugli::BlendMode::straight_alpha()),
+                depth_func: Some(ugli::DepthFunc::Less),
+                ..default()
+            },
+        );
     }
 
     pub fn cylinder(
@@ -97,6 +141,7 @@ impl Render {
             ),
             ugli::DrawParameters {
                 blend_mode: Some(ugli::BlendMode::straight_alpha()),
+                depth_func: Some(ugli::DepthFunc::Less),
                 ..default()
             },
         );

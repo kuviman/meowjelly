@@ -1,8 +1,14 @@
 tube_radius = 10
-fall_speed = 100
-acceleration = 10
 wall_section = 10
 
+[player]
+speed = 30
+acceleration = 300
+fall_speed = 100
+fall_acceleration = 10
+radius = 1
+
 [camera]
+horizontal_movement = 0.5
 distance = 10
 acceleration = 10

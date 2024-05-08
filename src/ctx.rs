@@ -11,6 +11,7 @@ pub struct CtxInner {
     pub assets: assets::Assets,
     pub config: config::Config,
     pub render: render::Render,
+    pub controls: controls::Controls,
 }
 
 impl Ctx {
@@ -19,6 +20,9 @@ impl Ctx {
             file::load_detect(run_dir().join("assets").join("config.toml"))
                 .await
                 .unwrap();
+        let controls = file::load_detect(run_dir().join("assets").join("controls.toml"))
+            .await
+            .unwrap();
         let assets: assets::Assets = geng
             .asset_manager()
             .load(run_dir().join("assets"))
@@ -30,6 +34,7 @@ impl Ctx {
                 geng: geng.clone(),
                 assets,
                 config,
+                controls,
                 render,
             }),
         }
