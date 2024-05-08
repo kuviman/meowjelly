@@ -82,6 +82,18 @@ impl Render {
         texture: &ugli::Texture,
         matrix: mat4<f32>,
     ) {
+        self.sprite_ext(framebuffer, camera, texture, matrix, Rgba::WHITE, true)
+    }
+
+    pub fn sprite_ext(
+        &self,
+        framebuffer: &mut ugli::Framebuffer,
+        camera: &dyn AbstractCamera3d,
+        texture: &ugli::Texture,
+        matrix: mat4<f32>,
+        color: Rgba<f32>,
+        depth_test: bool,
+    ) {
         let framebuffer_size = framebuffer.size().map(|x| x as f32);
         ugli::draw(
             framebuffer,
@@ -96,12 +108,13 @@ impl Render {
                     u_uv_matrix: mat3::identity(),
                     u_fog_color: self.config.fog_color,
                     u_fog_distance: self.config.fog_distance,
+                    u_color: color,
                 },
                 camera.uniforms(framebuffer_size),
             ),
             ugli::DrawParameters {
                 blend_mode: Some(ugli::BlendMode::straight_alpha()),
-                depth_func: Some(ugli::DepthFunc::Less),
+                depth_func: depth_test.then_some(ugli::DepthFunc::Less),
                 ..default()
             },
         );
@@ -136,6 +149,7 @@ impl Render {
                     u_uv_matrix: uv_matrix,
                     u_fog_color: self.config.fog_color,
                     u_fog_distance: self.config.fog_distance,
+                    u_color: Rgba::WHITE,
                 },
                 camera.uniforms(framebuffer_size),
             ),

@@ -18,9 +18,17 @@ pub struct Player {
 }
 
 #[derive(Deserialize)]
+pub struct Shadow {
+    pub alpha: f32,
+    pub distance: f32,
+    pub scale: f32,
+}
+
+#[derive(Deserialize)]
 pub struct Config {
     pub tube_radius: f32,
     pub camera: Camera,
     pub wall_section: f32,
+    pub shadow: Shadow,
     pub player: Player,
 }

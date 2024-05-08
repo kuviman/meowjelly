@@ -9,6 +9,7 @@ pub struct Walls {
 #[derive(geng::asset::Load)]
 pub struct Player {
     pub head: ugli::Texture,
+    pub shadow: ugli::Texture,
 }
 
 #[derive(geng::asset::Load)]

@@ -1,6 +1,11 @@
 tube_radius = 10
 wall_section = 10
 
+[shadow]
+distance = 7.5
+scale = 2
+alpha = 0.3
+
 [player]
 speed = 30
 acceleration = 300

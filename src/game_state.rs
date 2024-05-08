@@ -91,6 +91,28 @@ impl geng::State for GameState {
             );
         }
         if let Some(player) = &self.player {
+            // shadow
+            let distance_to_tube =
+                self.ctx.config.tube_radius - player.pos.xy().len() - player.radius;
+            let shadow_k =
+                (1.0 - distance_to_tube / self.ctx.config.shadow.distance).clamp(0.0, 1.0);
+            self.ctx.render.sprite_ext(
+                framebuffer,
+                &self.camera,
+                &self.ctx.assets.player.shadow,
+                mat4::translate(
+                    (player.pos.xy().normalize_or_zero() * self.ctx.config.tube_radius)
+                        .extend(player.pos.z),
+                ) * mat4::rotate_z(player.pos.xy().arg())
+                    * mat4::rotate_y(Angle::from_degrees(-90.0))
+                    * mat4::scale_uniform(
+                        (1.0 - shadow_k) * self.ctx.config.shadow.scale + shadow_k,
+                    ),
+                Rgba::new(1.0, 1.0, 1.0, self.ctx.config.shadow.alpha * shadow_k),
+                false,
+            );
+
+            // head
             self.ctx.render.sprite(
                 framebuffer,
                 &self.camera,

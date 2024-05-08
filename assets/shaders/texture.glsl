@@ -19,13 +19,14 @@ void main() {
 #endif
 
 #ifdef FRAGMENT_SHADER
+uniform vec4 u_color;
 uniform sampler2D u_texture;
 uniform ivec2 u_texture_size;
 uniform float u_fog_distance;
 uniform vec4 u_fog_color;
 void main() {
   float fog = clamp(-v_camera_pos.z / u_fog_distance, 0.0, 1.0);
-  vec4 color = smoothTexture2D(v_uv, u_texture, u_texture_size);
+  vec4 color = smoothTexture2D(v_uv, u_texture, u_texture_size) * u_color;
   gl_FragColor = color * (1.0 - fog) + vec4(u_fog_color.rgb, color.a) * fog;
 }
 #endif
