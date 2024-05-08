@@ -25,10 +25,17 @@ pub struct Shadow {
 }
 
 #[derive(Deserialize)]
+pub struct TouchControl {
+    pub small_radius: f32,
+    pub big_radius: f32,
+}
+
+#[derive(Deserialize)]
 pub struct Config {
     pub tube_radius: f32,
     pub camera: Camera,
     pub wall_section: f32,
     pub shadow: Shadow,
     pub player: Player,
+    pub touch_control: TouchControl,
 }

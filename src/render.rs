@@ -11,6 +11,7 @@ pub struct Render {
     quad: ugli::VertexBuffer<Vertex>,
     assets: Assets,
     pub config: Config,
+    pub white_texture: ugli::Texture,
 }
 
 #[derive(geng::asset::Load)]
@@ -72,6 +73,7 @@ impl Render {
             quad,
             assets,
             config,
+            white_texture: ugli::Texture::new_with(geng.ugli(), vec2::splat(1), |_| Rgba::WHITE),
         }
     }
 

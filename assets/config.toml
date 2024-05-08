@@ -14,6 +14,10 @@ fall_acceleration = 10
 radius = 1
 bounce_speed = 75
 
+[touch_control]
+small_radius = 1
+big_radius = 5
+
 [camera]
 horizontal_movement = 0.5
 distance = 10

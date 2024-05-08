@@ -32,18 +32,26 @@ struct Wall {
     range: Range<f32>,
 }
 
+struct TouchControl {
+    move_delta: vec2<f32>,
+    prev_pos: vec2<f64>,
+}
+
 pub struct GameState {
+    framebuffer_size: vec2<f32>,
     ctx: Ctx,
     camera: Camera,
     player: Option<Player>,
     transition: Option<geng::state::Transition>,
     walls: Vec<Wall>,
+    touch_control: Option<TouchControl>,
 }
 
 impl GameState {
     pub fn new(ctx: &Ctx) -> Self {
         Self {
             ctx: ctx.clone(),
+            framebuffer_size: vec2::splat(1.0),
             camera: Camera {
                 pos: vec3::ZERO,
                 fov: Angle::from_degrees(ctx.render.config.fov),
@@ -57,6 +65,7 @@ impl GameState {
             }),
             transition: None,
             walls: Vec::new(),
+            touch_control: None,
         }
     }
 
@@ -68,10 +77,40 @@ impl GameState {
             *self = Self::new(&self.ctx);
         }
     }
+
+    fn touch_start(&mut self, pos: vec2<f64>) {
+        self.touch_control = Some(TouchControl {
+            move_delta: vec2::ZERO,
+            prev_pos: pos,
+        });
+    }
+
+    fn touch_move(&mut self, pos: vec2<f64>) {
+        let raycast = |window_pos: vec2<f64>| -> vec2<f32> {
+            let ray = self
+                .camera
+                .pixel_ray(self.framebuffer_size, window_pos.map(|x| x as f32));
+            let z = self.camera.pos.z - self.ctx.config.camera.distance;
+            let t = (z - ray.from.z) / ray.dir.z;
+            (ray.from + ray.dir * t).xy()
+        };
+        if let Some(touch) = &mut self.touch_control {
+            touch.move_delta += raycast(pos) - raycast(touch.prev_pos);
+            touch.move_delta = touch
+                .move_delta
+                .clamp_len(..=self.ctx.config.touch_control.big_radius);
+            touch.prev_pos = pos;
+        }
+    }
+
+    fn touch_end(&mut self) {
+        self.touch_control = None;
+    }
 }
 
 impl geng::State for GameState {
     fn draw(&mut self, framebuffer: &mut ugli::Framebuffer) {
+        self.framebuffer_size = framebuffer.size().map(|x| x as f32);
         ugli::clear(
             framebuffer,
             Some(self.ctx.render.config.fog_color),
@@ -119,26 +158,49 @@ impl geng::State for GameState {
                 &self.ctx.assets.player.head,
                 mat4::translate(player.pos) * mat4::scale_uniform(player.radius),
             );
+
+            if let Some(touch) = &self.touch_control {
+                self.ctx.render.sprite_ext(
+                    framebuffer,
+                    &self.camera,
+                    &self.ctx.render.white_texture,
+                    mat4::translate(player.pos)
+                        * mat4::from_orts(
+                            touch.move_delta.extend(0.0),
+                            touch.move_delta.normalize_or_zero().rotate_90().extend(0.0) * 0.1,
+                            vec3::UNIT_Z,
+                        )
+                        * mat4::scale_uniform(0.5)
+                        * mat4::translate(vec3(1.0, 1.0, 0.0)),
+                    Rgba::WHITE,
+                    false,
+                );
+            }
         }
     }
     fn update(&mut self, delta_time: f64) {
         let delta_time = delta_time as f32;
         if let Some(player) = &mut self.player {
             // controls
-            let mut target_vel = vec2::ZERO;
-            let mut control = |keys: &[geng::Key], x: f32, y: f32| {
-                if keys
-                    .iter()
-                    .any(|key| self.ctx.geng.window().pressed_keys().contains(key))
-                {
-                    target_vel += vec2(x, y);
-                }
+            let target_vel = if let Some(touch) = &self.touch_control {
+                (touch.move_delta / self.ctx.config.touch_control.small_radius).clamp_len(..=1.0)
+                    * self.ctx.config.player.speed
+            } else {
+                let mut target_vel = vec2::ZERO;
+                let mut control = |keys: &[geng::Key], x: f32, y: f32| {
+                    if keys
+                        .iter()
+                        .any(|key| self.ctx.geng.window().pressed_keys().contains(key))
+                    {
+                        target_vel += vec2(x, y);
+                    }
+                };
+                control(&self.ctx.controls.player.up, 0.0, 1.0);
+                control(&self.ctx.controls.player.left, -1.0, 0.0);
+                control(&self.ctx.controls.player.down, 0.0, -1.0);
+                control(&self.ctx.controls.player.right, 1.0, 0.0);
+                target_vel.clamp_len(..=1.0) * self.ctx.config.player.speed
             };
-            control(&self.ctx.controls.player.up, 0.0, 1.0);
-            control(&self.ctx.controls.player.left, -1.0, 0.0);
-            control(&self.ctx.controls.player.down, 0.0, -1.0);
-            control(&self.ctx.controls.player.right, 1.0, 0.0);
-            let target_vel = target_vel.clamp_len(..=1.0) * self.ctx.config.player.speed;
             player.vel += (target_vel - player.vel.xy())
                 .clamp_len(..=self.ctx.config.player.acceleration * delta_time)
                 .extend(0.0);
@@ -160,6 +222,11 @@ impl geng::State for GameState {
                 }
             }
 
+            if let Some(touch) = &mut self.touch_control {
+                touch.move_delta = touch
+                    .move_delta
+                    .clamp_len(..=touch.move_delta.len() - player.vel.xy().len() * delta_time);
+            }
             player.pos += player.vel * delta_time;
 
             // camera
@@ -184,8 +251,31 @@ impl geng::State for GameState {
         }
     }
     fn handle_event(&mut self, event: geng::Event) {
-        if let geng::Event::KeyPress { key } = event {
-            self.key_press(key)
+        match event {
+            geng::Event::KeyPress { key } => {
+                self.key_press(key);
+            }
+            geng::Event::MousePress { .. } => {
+                if let Some(pos) = self.ctx.geng.window().cursor_position() {
+                    self.touch_start(pos);
+                }
+            }
+            geng::Event::CursorMove { position } => {
+                self.touch_move(position);
+            }
+            geng::Event::MouseRelease { .. } => {
+                self.touch_end();
+            }
+            geng::Event::TouchStart(touch) => {
+                self.touch_start(touch.position);
+            }
+            geng::Event::TouchMove(touch) => {
+                self.touch_move(touch.position);
+            }
+            geng::Event::TouchEnd(..) => {
+                self.touch_end();
+            }
+            _ => {}
         }
     }
     fn transition(&mut self) -> Option<geng::state::Transition> {
