@@ -102,6 +102,7 @@ impl geng::State for GameState {
     fn update(&mut self, delta_time: f64) {
         let delta_time = delta_time as f32;
         if let Some(player) = &mut self.player {
+            // controls
             let mut target_vel = vec2::ZERO;
             let mut control = |keys: &[geng::Key], x: f32, y: f32| {
                 if keys
@@ -120,10 +121,27 @@ impl geng::State for GameState {
                 .clamp_len(..=self.ctx.config.player.acceleration * delta_time)
                 .extend(0.0);
 
+            // gravity
             player.vel.z = (player.vel.z - self.ctx.config.player.fall_acceleration * delta_time)
                 .min(self.ctx.config.player.fall_speed);
+
+            // collision with the tube
+            let tube_normal = -player.pos.xy().normalize_or_zero();
+            let tube_penetration = -vec2::dot(player.pos.xy(), tube_normal) + player.radius
+                - self.ctx.config.tube_radius;
+            if tube_penetration > 0.0 {
+                player.pos += tube_normal.extend(0.0) * tube_penetration;
+                let normal_vel = vec2::dot(tube_normal, player.vel.xy());
+                if normal_vel < 0.0 {
+                    let change =
+                        normal_vel * tube_normal * (1.0 + self.ctx.config.player.bounciness);
+                    player.vel -= change.extend(0.0);
+                }
+            }
+
             player.pos += player.vel * delta_time;
 
+            // camera
             self.camera.pos = (player.pos.xy() * self.ctx.config.camera.horizontal_movement)
                 .extend(player.pos.z + self.ctx.config.camera.distance);
             self.camera.vel = player.vel;
