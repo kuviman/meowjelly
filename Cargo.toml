@@ -6,3 +6,7 @@ edition = "2021"
 [dependencies]
 geng.git = "https://github.com/kuviman/geng"
 serde = "1"
+
+[patch.crates-io]
+# https://github.com/smol-rs/async-broadcast/pull/47
+async-broadcast = {git = "https://github.com/kuviman/async-broadcast", branch = "fix-wasm"}

@@ -85,22 +85,22 @@ impl GameState {
         });
     }
 
+    fn raycast(&self, window_pos: vec2<f64>) -> vec2<f32> {
+        let ray = self
+            .camera
+            .pixel_ray(self.framebuffer_size, window_pos.map(|x| x as f32));
+        let z = self.camera.pos.z - self.ctx.config.camera.distance;
+        let t = (z - ray.from.z) / ray.dir.z;
+        (ray.from + ray.dir * t).xy()
+    }
+
     fn touch_move(&mut self, pos: vec2<f64>) {
-        let raycast = |window_pos: vec2<f64>| -> vec2<f32> {
-            let ray = self
-                .camera
-                .pixel_ray(self.framebuffer_size, window_pos.map(|x| x as f32));
-            let z = self.camera.pos.z - self.ctx.config.camera.distance;
-            let t = (z - ray.from.z) / ray.dir.z;
-            (ray.from + ray.dir * t).xy()
-        };
-        if let Some(touch) = &mut self.touch_control {
-            touch.move_delta += raycast(pos) - raycast(touch.prev_pos);
-            touch.move_delta = touch
-                .move_delta
-                .clamp_len(..=self.ctx.config.touch_control.big_radius);
+        let mut touch_control = self.touch_control.take();
+        if let Some(touch) = &mut touch_control {
+            touch.move_delta += self.raycast(pos) - self.raycast(touch.prev_pos);
             touch.prev_pos = pos;
         }
+        self.touch_control = touch_control;
     }
 
     fn touch_end(&mut self) {
@@ -164,9 +164,9 @@ impl geng::State for GameState {
                     framebuffer,
                     &self.camera,
                     &self.ctx.render.white_texture,
-                    mat4::translate(player.pos)
+                    mat4::translate(self.raycast(touch.prev_pos).extend(player.pos.z))
                         * mat4::from_orts(
-                            touch.move_delta.extend(0.0),
+                            -touch.move_delta.extend(0.0),
                             touch.move_delta.normalize_or_zero().rotate_90().extend(0.0) * 0.1,
                             vec3::UNIT_Z,
                         )
@@ -222,12 +222,17 @@ impl geng::State for GameState {
                 }
             }
 
+            let prev_pos = player.pos;
+            player.pos += player.vel * delta_time;
             if let Some(touch) = &mut self.touch_control {
+                let performed = (player.pos - prev_pos).xy() * 0.5;
                 touch.move_delta = touch
                     .move_delta
-                    .clamp_len(..=touch.move_delta.len() - player.vel.xy().len() * delta_time);
+                    .clamp_len(..=touch.move_delta.len() - performed.len());
+                touch.move_delta = touch
+                    .move_delta
+                    .clamp_len(..=self.ctx.config.touch_control.big_radius);
             }
-            player.pos += player.vel * delta_time;
 
             // camera
             self.camera.pos = (player.pos.xy() * self.ctx.config.camera.horizontal_movement)
