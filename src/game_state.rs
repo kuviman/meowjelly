@@ -123,7 +123,7 @@ impl geng::State for GameState {
 
             // gravity
             player.vel.z = (player.vel.z - self.ctx.config.player.fall_acceleration * delta_time)
-                .min(self.ctx.config.player.fall_speed);
+                .clamp_abs(self.ctx.config.player.fall_speed);
 
             // collision with the tube
             let tube_normal = -player.pos.xy().normalize_or_zero();
@@ -133,9 +133,8 @@ impl geng::State for GameState {
                 player.pos += tube_normal.extend(0.0) * tube_penetration;
                 let normal_vel = vec2::dot(tube_normal, player.vel.xy());
                 if normal_vel < 0.0 {
-                    let change =
-                        normal_vel * tube_normal * (1.0 + self.ctx.config.player.bounciness);
-                    player.vel -= change.extend(0.0);
+                    let change = (self.ctx.config.player.bounce_speed - normal_vel) * tube_normal;
+                    player.vel += change.extend(0.0);
                 }
             }
 

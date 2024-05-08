@@ -7,7 +7,7 @@ acceleration = 300
 fall_speed = 100
 fall_acceleration = 10
 radius = 1
-bounciness = 1
+bounce_speed = 75
 
 [camera]
 horizontal_movement = 0.5
