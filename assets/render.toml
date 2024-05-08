@@ -1,0 +1,4 @@
+cylinder_segments = 50
+fov = 120
+fog_color = "#aaf"
+fog_distance = 100

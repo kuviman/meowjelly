@@ -1,1 +1,8 @@
-background_color = "#aaf"
+tube_radius = 10
+fall_speed = 100
+acceleration = 10
+wall_section = 10
+
+[camera]
+distance = 10
+acceleration = 10

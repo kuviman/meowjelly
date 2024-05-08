@@ -1,37 +1,17 @@
 use geng::prelude::*;
 
 mod assets;
+mod config;
+mod ctx;
 mod game_state;
+mod render;
 
-use assets::Assets;
-use game_state::GameState;
-
-#[derive(Clone, Deref)]
-struct Ctx {
-    #[deref]
-    inner: Rc<CtxInner>,
-}
-
-struct CtxInner {
-    geng: Geng,
-    assets: Assets,
-}
+use ctx::Ctx;
 
 async fn run(geng: Geng) {
-    let geng = &geng;
-    let assets: Assets = geng
-        .asset_manager()
-        .load(run_dir().join("assets"))
-        .await
-        .expect("Failed to load assets");
-    let ctx = Ctx {
-        inner: Rc::new(CtxInner {
-            geng: geng.clone(),
-            assets,
-        }),
-    };
+    let ctx = Ctx::load(&geng).await;
     let ctx = &ctx;
-    geng.run_state(GameState::new(ctx)).await;
+    geng.run_state(game_state::GameState::new(ctx)).await;
 }
 
 #[derive(clap::Parser)]
