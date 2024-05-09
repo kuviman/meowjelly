@@ -19,12 +19,19 @@ impl geng::AbstractCamera3d for Camera {
     }
 
     fn projection_matrix(&self, framebuffer_size: vec2<f32>) -> mat4<f32> {
-        mat4::perspective(
-            self.fov.as_radians(),
-            framebuffer_size.aspect(),
-            0.1,
-            self.far,
-        )
+        let near = 0.1;
+        let far = self.far;
+        let fov = self.fov.as_radians();
+        let aspect = framebuffer_size.aspect();
+        if aspect >= 1.0 {
+            let ymax = near * (fov / 2.0).tan();
+            let xmax = ymax * aspect;
+            mat4::frustum(-xmax, xmax, -ymax, ymax, near, far)
+        } else {
+            let xmax = near * (fov / 2.0).tan();
+            let ymax = xmax / aspect;
+            mat4::frustum(-xmax, xmax, -ymax, ymax, near, far)
+        }
     }
 }
 
