@@ -54,6 +54,7 @@ pub struct Legs {
     pub wiggle: f32,
     pub freq: f32,
     pub z: f32,
+    pub rotate_speed: f32,
 }
 
 #[derive(Deserialize)]
