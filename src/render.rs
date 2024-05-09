@@ -130,7 +130,6 @@ impl Render {
         z: Range<f32>,
         radius: f32,
     ) {
-        let framebuffer_size = framebuffer.size().map(|x| x as f32);
         let model_matrix = mat4::translate(vec3(0.0, 0.0, z.start))
             * mat4::scale(vec2::splat(radius).extend(z.end - z.start));
         let uv_matrix = mat3::scale(vec2(
@@ -138,6 +137,18 @@ impl Render {
             texture.size().map(|x| x as f32).aspect() / (2.0 * f32::PI * radius),
         )) * mat3::translate(vec2(0.0, z.start))
             * mat3::scale(vec2(1.0, z.end - z.start));
+        self.cylinder_ext(framebuffer, camera, texture, model_matrix, uv_matrix);
+    }
+
+    pub fn cylinder_ext(
+        &self,
+        framebuffer: &mut ugli::Framebuffer,
+        camera: &dyn AbstractCamera3d,
+        texture: &ugli::Texture,
+        model_matrix: mat4<f32>,
+        uv_matrix: mat3<f32>,
+    ) {
+        let framebuffer_size = framebuffer.size().map(|x| x as f32);
         ugli::draw(
             framebuffer,
             &self.assets.shaders.texture,
