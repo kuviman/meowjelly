@@ -52,6 +52,7 @@ struct Bounce {
 pub struct GameState {
     framebuffer_size: vec2<f32>,
     ctx: Ctx,
+    time: f32,
     camera: Camera,
     player: Option<Player>,
     transition: Option<geng::state::Transition>,
@@ -64,6 +65,7 @@ impl GameState {
     pub fn new(ctx: &Ctx) -> Self {
         Self {
             ctx: ctx.clone(),
+            time: 0.0,
             framebuffer_size: vec2::splat(1.0),
             camera: Camera {
                 pos: vec3::ZERO,
@@ -165,8 +167,20 @@ impl geng::State for GameState {
                 false,
             );
 
-            // head
             let mut transform = mat4::translate(player.pos) * mat4::scale_uniform(player.radius);
+            transform *= mat4::rotate_y(Angle::from_degrees(
+                self.ctx.config.player.rotate_angle * player.vel.x
+                    / self.ctx.config.player.max_speed,
+            ));
+            transform *= mat4::rotate_x(Angle::from_degrees(
+                -self.ctx.config.player.rotate_angle * player.vel.y
+                    / self.ctx.config.player.max_speed,
+            ));
+            transform *= mat4::rotate_z(Angle::from_degrees(
+                (self.time * f32::PI * 2.0 * self.ctx.config.passive_rotation.frequency).sin()
+                    * self.ctx.config.passive_rotation.amplitude
+                    + self.time * self.ctx.config.passive_rotation.speed,
+            ));
             if let Some(bounce) = &self.bounce {
                 /// https://easings.net/#easeOutElastic
                 fn ease_out_elastic(x: f32) -> f32 {
@@ -184,6 +198,8 @@ impl geng::State for GameState {
                     Angle::from_degrees(360.0 * ease_out_elastic(bounce.t)),
                 )
             }
+
+            // head
             self.ctx.render.sprite(
                 framebuffer,
                 &self.camera,
@@ -212,6 +228,8 @@ impl geng::State for GameState {
     }
     fn update(&mut self, delta_time: f64) {
         let delta_time = delta_time as f32;
+
+        self.time += delta_time;
 
         if let Some(bounce) = &mut self.bounce {
             bounce.t += delta_time / self.ctx.config.player.bounce_time;

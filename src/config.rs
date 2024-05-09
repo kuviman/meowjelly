@@ -16,6 +16,7 @@ pub struct Player {
     pub radius: f32,
     pub bounce_speed: f32,
     pub bounce_time: f32,
+    pub rotate_angle: f32,
 }
 
 #[derive(Deserialize)]
@@ -33,11 +34,19 @@ pub struct TouchControl {
 }
 
 #[derive(Deserialize)]
+pub struct PassiveRotation {
+    pub speed: f32,
+    pub frequency: f32,
+    pub amplitude: f32,
+}
+
+#[derive(Deserialize)]
 pub struct Config {
     pub tube_radius: f32,
     pub camera: Camera,
     pub wall_section: f32,
     pub shadow: Shadow,
     pub player: Player,
+    pub passive_rotation: PassiveRotation,
     pub touch_control: TouchControl,
 }

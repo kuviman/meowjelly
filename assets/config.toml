@@ -3,8 +3,8 @@ wall_section = 10
 
 [shadow]
 distance = 7.5
-scale = 2
-alpha = 0.3
+scale = 4
+alpha = 0.6
 
 [player]
 max_speed = 30
@@ -14,6 +14,12 @@ fall_acceleration = 10
 radius = 1
 bounce_speed = 75
 bounce_time = 2
+rotate_angle = 45
+
+[passive_rotation]
+speed = 0
+amplitude = 10
+frequency = 0.5
 
 [touch_control]
 max_speed = 60
