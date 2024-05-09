@@ -28,5 +28,8 @@ void main() {
   float fog = clamp(-v_camera_pos.z / u_fog_distance, 0.0, 1.0);
   vec4 color = smoothTexture2D(v_uv, u_texture, u_texture_size) * u_color;
   gl_FragColor = color * (1.0 - fog) + vec4(u_fog_color.rgb, color.a) * fog;
+  if (gl_FragColor.a == 0.0) {
+    discard;
+  }
 }
 #endif

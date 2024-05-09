@@ -219,6 +219,31 @@ impl geng::State for GameState {
                 )
             }
 
+            const LEGS: usize = 8;
+            for leg in 0..8 {
+                static PHASES: once_cell::sync::Lazy<[f32; LEGS]> =
+                    once_cell::sync::Lazy::new(|| {
+                        let mut rng = StdRng::seed_from_u64(123);
+                        std::array::from_fn(|_| rng.gen())
+                    });
+                let texture = &self.ctx.assets.player.leg;
+                let v =
+                    vec2(self.ctx.config.legs.length, 0.0).rotate(Angle::from_degrees(360.0 * leg as f32 / LEGS as f32));
+                let v = v + vec2(self.ctx.config.legs.wiggle, 0.0)
+                    .rotate(Angle::from_degrees((self.time * self.ctx.config.legs.freq + PHASES[leg]) * 360.0));
+                self.ctx.render.sprite(
+                    framebuffer,
+                    &self.camera,
+                    texture,
+                    transform
+                        * mat4::from_orts(v.extend(-self.ctx.config.legs.z), v.rotate_90().extend(0.0), vec3::UNIT_Z)
+                        * mat4::scale(
+                            vec3(texture.size().map(|x| x as f32).aspect(), 1.0, 1.0) / 2.0,
+                        )
+                        * mat4::translate(vec3(1.0, 0.0, 0.0)),
+                );
+            }
+
             // head
             self.ctx.render.sprite(
                 framebuffer,

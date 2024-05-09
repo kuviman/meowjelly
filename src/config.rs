@@ -49,7 +49,16 @@ pub struct Shake {
 }
 
 #[derive(Deserialize)]
+pub struct Legs {
+    pub length: f32,
+    pub wiggle: f32,
+    pub freq: f32,
+    pub z: f32,
+}
+
+#[derive(Deserialize)]
 pub struct Config {
+    pub legs: Legs,
     pub shake: Shake,
     pub bounce_particles: usize,
     pub bounce_particle_speed: f32,

@@ -3,13 +3,19 @@ wall_section = 10
 bounce_particles = 10
 bounce_particle_speed = 10
 
+[legs]
+length = 0.7
+wiggle = 0.04
+freq = 2
+z = 0.5
+
 [shake]
 time = 0.3
 amount = 2
 freq = 60
 
 [shadow]
-distance = 7.5
+distance = 9.5
 scale = 4
 alpha = 0.6
 
@@ -19,7 +25,7 @@ acceleration = 300
 fall_speed = 100
 fall_acceleration = 10
 radius = 1
-bounce_speed = 75
+bounce_speed = 50
 bounce_time = 2
 rotate_angle = 45
 particle_speed_ratio = 0.0
