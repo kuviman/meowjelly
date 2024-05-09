@@ -42,7 +42,15 @@ pub struct PassiveRotation {
 }
 
 #[derive(Deserialize)]
+pub struct Shake {
+    pub time: f32,
+    pub amount: f32,
+    pub freq: f32,
+}
+
+#[derive(Deserialize)]
 pub struct Config {
+    pub shake: Shake,
     pub bounce_particles: usize,
     pub bounce_particle_speed: f32,
     pub tube_radius: f32,

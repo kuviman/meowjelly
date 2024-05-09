@@ -3,6 +3,11 @@ wall_section = 10
 bounce_particles = 10
 bounce_particle_speed = 10
 
+[shake]
+time = 0.3
+amount = 2
+freq = 60
+
 [shadow]
 distance = 7.5
 scale = 4

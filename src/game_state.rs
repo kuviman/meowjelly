@@ -9,8 +9,15 @@ struct Player {
     move_particles: ParticleSpawner,
 }
 
+struct CameraShake {
+    next: f32,
+    offset: vec2<f32>,
+    amount: f32,
+}
+
 struct Camera {
     pos: vec3<f32>,
+    shake: CameraShake,
     fov: Angle,
     vel: vec3<f32>,
     far: f32,
@@ -18,7 +25,7 @@ struct Camera {
 
 impl geng::AbstractCamera3d for Camera {
     fn view_matrix(&self) -> mat4<f32> {
-        mat4::translate(-self.pos)
+        mat4::translate(-self.pos + self.shake.offset.extend(0.0) * self.shake.amount)
     }
 
     fn projection_matrix(&self, framebuffer_size: vec2<f32>) -> mat4<f32> {
@@ -63,6 +70,7 @@ pub struct GameState {
     touch_control: Option<TouchControl>,
     bounce: Option<Bounce>,
     bounce_particles: ParticleSpawner,
+    shake_time: f32,
 }
 
 impl GameState {
@@ -76,6 +84,11 @@ impl GameState {
                 fov: Angle::from_degrees(ctx.render.config.fov),
                 vel: vec3::ZERO,
                 far: ctx.render.config.fog_distance,
+                shake: CameraShake {
+                    next: 0.0,
+                    offset: vec2::ZERO,
+                    amount: 0.0,
+                },
             },
             player: Some(Player {
                 pos: vec3::ZERO,
@@ -88,6 +101,7 @@ impl GameState {
             touch_control: None,
             bounce: None,
             bounce_particles: ctx.particles.spawner(&ctx.particles.config.bounce),
+            shake_time: 0.0,
         }
     }
 
@@ -239,6 +253,15 @@ impl geng::State for GameState {
 
         self.time += delta_time;
 
+        self.shake_time -= delta_time;
+        self.camera.shake.amount = self.ctx.config.shake.amount
+            * (self.shake_time / self.ctx.config.shake.time).clamp(0.0, 1.0);
+        self.camera.shake.next -= delta_time;
+        if self.camera.shake.next < 0.0 {
+            self.camera.shake.next = 1.0 / self.ctx.config.shake.freq;
+            self.camera.shake.offset = thread_rng().gen_circle(vec2::ZERO, 1.0);
+        }
+
         if let Some(bounce) = &mut self.bounce {
             bounce.t += delta_time / self.ctx.config.player.bounce_time;
             if bounce.t >= 1.0 {
@@ -310,6 +333,7 @@ impl geng::State for GameState {
                     for _ in 0..self.ctx.config.bounce_particles {
                         self.bounce_particles.spawn();
                     }
+                    self.shake_time = self.ctx.config.shake.time;
                 }
             }
 
