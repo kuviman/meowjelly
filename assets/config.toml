@@ -7,7 +7,7 @@ scale = 2
 alpha = 0.3
 
 [player]
-speed = 30
+max_speed = 30
 acceleration = 300
 fall_speed = 100
 fall_acceleration = 10
@@ -15,8 +15,9 @@ radius = 1
 bounce_speed = 75
 
 [touch_control]
-small_radius = 1
-big_radius = 5
+max_speed = 60
+small_radius = 3
+big_radius = 10
 
 [camera]
 horizontal_movement = 0.5

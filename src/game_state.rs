@@ -184,7 +184,7 @@ impl geng::State for GameState {
             // controls
             let target_vel = if let Some(touch) = &self.touch_control {
                 (touch.move_delta / self.ctx.config.touch_control.small_radius).clamp_len(..=1.0)
-                    * self.ctx.config.player.speed
+                    * self.ctx.config.touch_control.max_speed
             } else {
                 let mut target_vel = vec2::ZERO;
                 let mut control = |keys: &[geng::Key], x: f32, y: f32| {
@@ -199,7 +199,7 @@ impl geng::State for GameState {
                 control(&self.ctx.controls.player.left, -1.0, 0.0);
                 control(&self.ctx.controls.player.down, 0.0, -1.0);
                 control(&self.ctx.controls.player.right, 1.0, 0.0);
-                target_vel.clamp_len(..=1.0) * self.ctx.config.player.speed
+                target_vel.clamp_len(..=1.0) * self.ctx.config.player.max_speed
             };
             player.vel += (target_vel - player.vel.xy())
                 .clamp_len(..=self.ctx.config.player.acceleration * delta_time)
