@@ -2,10 +2,11 @@ use geng::prelude::*;
 
 mod assets;
 mod config;
+mod controls;
 mod ctx;
 mod game_state;
+mod particles;
 mod render;
-mod controls;
 
 use ctx::Ctx;
 

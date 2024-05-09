@@ -17,6 +17,7 @@ pub struct Player {
     pub bounce_speed: f32,
     pub bounce_time: f32,
     pub rotate_angle: f32,
+    pub particle_speed_ratio: f32,
 }
 
 #[derive(Deserialize)]

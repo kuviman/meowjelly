@@ -11,6 +11,7 @@ pub struct CtxInner {
     pub assets: assets::Assets,
     pub config: config::Config,
     pub render: render::Render,
+    pub particles: particles::Particles,
     pub controls: controls::Controls,
 }
 
@@ -29,6 +30,7 @@ impl Ctx {
             .await
             .unwrap();
         let render = render::Render::init(geng).await;
+        let particles = particles::Particles::init(geng).await;
         Self {
             inner: Rc::new(CtxInner {
                 geng: geng.clone(),
@@ -36,6 +38,7 @@ impl Ctx {
                 config,
                 controls,
                 render,
+                particles,
             }),
         }
     }

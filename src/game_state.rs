@@ -1,9 +1,12 @@
+use self::particles::ParticleSpawner;
+
 use super::*;
 
 struct Player {
     pos: vec3<f32>,
     radius: f32,
     vel: vec3<f32>,
+    move_particles: ParticleSpawner,
 }
 
 struct Camera {
@@ -77,6 +80,7 @@ impl GameState {
                 pos: vec3::ZERO,
                 vel: vec3::ZERO,
                 radius: ctx.config.player.radius,
+                move_particles: ctx.particles.spawner(&ctx.particles.config.movement),
             }),
             transition: None,
             walls: Vec::new(),
@@ -225,6 +229,8 @@ impl geng::State for GameState {
                 );
             }
         }
+
+        self.ctx.particles.draw(framebuffer, &self.camera);
     }
     fn update(&mut self, delta_time: f64) {
         let delta_time = delta_time as f32;
@@ -239,6 +245,10 @@ impl geng::State for GameState {
         }
 
         if let Some(player) = &mut self.player {
+            player.move_particles.pos = player.pos;
+            player.move_particles.vel = player.vel * self.ctx.config.player.particle_speed_ratio;
+            player.move_particles.update(delta_time);
+
             // controls
             let target_vel = if let Some(touch) = &self.touch_control {
                 (touch.move_delta / self.ctx.config.touch_control.small_radius).clamp_len(..=1.0)

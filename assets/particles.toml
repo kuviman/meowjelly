@@ -1,0 +1,11 @@
+[movement]
+freq = 40
+life = 0.1
+size = 0.3
+color = "#f0f4"
+extra_vel = 1
+extra_life = 0.1
+extra_size = 0.8
+extra_hue = 0.2
+extra_saturation = 0.1
+extra_lightness = 0.1
