@@ -13,6 +13,7 @@ fall_speed = 100
 fall_acceleration = 10
 radius = 1
 bounce_speed = 75
+bounce_time = 2
 
 [touch_control]
 max_speed = 60

@@ -37,6 +37,11 @@ struct TouchControl {
     prev_pos: vec2<f64>,
 }
 
+struct Bounce {
+    t: f32,
+    axis: vec3<f32>,
+}
+
 pub struct GameState {
     framebuffer_size: vec2<f32>,
     ctx: Ctx,
@@ -45,6 +50,7 @@ pub struct GameState {
     transition: Option<geng::state::Transition>,
     walls: Vec<Wall>,
     touch_control: Option<TouchControl>,
+    bounce: Option<Bounce>,
 }
 
 impl GameState {
@@ -66,6 +72,7 @@ impl GameState {
             transition: None,
             walls: Vec::new(),
             touch_control: None,
+            bounce: None,
         }
     }
 
@@ -152,11 +159,29 @@ impl geng::State for GameState {
             );
 
             // head
+            let mut transform = mat4::translate(player.pos) * mat4::scale_uniform(player.radius);
+            if let Some(bounce) = &self.bounce {
+                /// https://easings.net/#easeOutElastic
+                fn ease_out_elastic(x: f32) -> f32 {
+                    if x == 0.0 {
+                        return 0.0;
+                    }
+                    if x == 1.0 {
+                        return 1.0;
+                    }
+                    let c4 = 2.0 * f32::PI / 3.0;
+                    2.0.powf(-10.0 * x) * ((x * 10.0 - 0.75) * c4).sin() + 1.0
+                }
+                transform *= mat4::rotate(
+                    bounce.axis,
+                    Angle::from_degrees(360.0 * ease_out_elastic(bounce.t)),
+                )
+            }
             self.ctx.render.sprite(
                 framebuffer,
                 &self.camera,
                 &self.ctx.assets.player.head,
-                mat4::translate(player.pos) * mat4::scale_uniform(player.radius),
+                transform,
             );
 
             if let Some(touch) = &self.touch_control {
@@ -180,6 +205,14 @@ impl geng::State for GameState {
     }
     fn update(&mut self, delta_time: f64) {
         let delta_time = delta_time as f32;
+
+        if let Some(bounce) = &mut self.bounce {
+            bounce.t += delta_time / self.ctx.config.player.bounce_time;
+            if bounce.t >= 1.0 {
+                self.bounce = None;
+            }
+        }
+
         if let Some(player) = &mut self.player {
             // controls
             let target_vel = if let Some(touch) = &self.touch_control {
@@ -219,6 +252,16 @@ impl geng::State for GameState {
                 if normal_vel < 0.0 {
                     let change = (self.ctx.config.player.bounce_speed - normal_vel) * tube_normal;
                     player.vel += change.extend(0.0);
+                    let mut rng = thread_rng();
+                    self.bounce = Some(Bounce {
+                        t: 0.0,
+                        axis: vec3(
+                            rng.gen_range(-1.0..1.0),
+                            rng.gen_range(-1.0..1.0),
+                            rng.gen_range(-1.0..1.0),
+                        )
+                        .normalize_or_zero(),
+                    });
                 }
             }
 
