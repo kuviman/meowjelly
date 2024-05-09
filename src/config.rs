@@ -43,6 +43,8 @@ pub struct PassiveRotation {
 
 #[derive(Deserialize)]
 pub struct Config {
+    pub bounce_particles: usize,
+    pub bounce_particle_speed: f32,
     pub tube_radius: f32,
     pub camera: Camera,
     pub wall_section: f32,

@@ -1,5 +1,7 @@
 tube_radius = 10
 wall_section = 10
+bounce_particles = 10
+bounce_particle_speed = 10
 
 [shadow]
 distance = 7.5

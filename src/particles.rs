@@ -30,6 +30,7 @@ struct Assets {
 #[derive(Deserialize)]
 pub struct Config {
     pub movement: Rc<SpawnerConfig>,
+    pub bounce: Rc<SpawnerConfig>,
 }
 
 #[derive(Deserialize)]
@@ -58,7 +59,7 @@ impl ParticleSpawner {
     pub fn update(&mut self, delta_time: f32) {
         self.next -= delta_time;
         while self.next < 0.0 {
-            let mut instance = self.create(self.pos, self.vel);
+            let mut instance = self.create();
             let time_fix = -self.next;
             instance.i_start_time -= time_fix;
             instance.i_end_time -= time_fix;
@@ -66,15 +67,19 @@ impl ParticleSpawner {
             self.inner.instances.borrow_mut().push(instance);
         }
     }
-    pub fn create(&mut self, pos: vec3<f32>, vel: vec3<f32>) -> Instance {
+    pub fn spawn(&mut self) {
+        let instance = self.create();
+        self.inner.instances.borrow_mut().push(instance);
+    }
+    pub fn create(&mut self) -> Instance {
         let mut rng = thread_rng();
         let lifetime = self.config.life + rng.gen_range(0.0..self.config.extra_life);
         let current_time = self.inner.timer.elapsed().as_secs_f64() as f32;
         Instance {
-            i_pos: pos,
+            i_pos: self.pos,
             i_vel: rng
-                .gen_circle(vel.xy(), self.config.extra_vel)
-                .extend(vel.z + rng.gen_range(-self.config.extra_vel..self.config.extra_vel)),
+                .gen_circle(self.vel.xy(), self.config.extra_vel)
+                .extend(self.vel.z + rng.gen_range(-self.config.extra_vel..self.config.extra_vel)),
             i_start_time: current_time,
             i_end_time: current_time + lifetime,
             i_size: self.config.size + rng.gen_range(0.0..self.config.extra_size),

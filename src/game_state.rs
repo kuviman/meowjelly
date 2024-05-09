@@ -62,6 +62,7 @@ pub struct GameState {
     walls: Vec<Wall>,
     touch_control: Option<TouchControl>,
     bounce: Option<Bounce>,
+    bounce_particles: ParticleSpawner,
 }
 
 impl GameState {
@@ -86,6 +87,7 @@ impl GameState {
             walls: Vec::new(),
             touch_control: None,
             bounce: None,
+            bounce_particles: ctx.particles.spawner(&ctx.particles.config.bounce),
         }
     }
 
@@ -247,7 +249,9 @@ impl geng::State for GameState {
         if let Some(player) = &mut self.player {
             player.move_particles.pos = player.pos;
             player.move_particles.vel = player.vel * self.ctx.config.player.particle_speed_ratio;
-            player.move_particles.update(delta_time);
+            player
+                .move_particles
+                .update(delta_time * player.vel.z.abs() / self.ctx.config.player.fall_speed);
 
             // controls
             let target_vel = if let Some(touch) = &self.touch_control {
@@ -297,6 +301,15 @@ impl geng::State for GameState {
                         )
                         .normalize_or_zero(),
                     });
+                    self.bounce_particles.pos = (player.pos.xy().normalize()
+                        * self.ctx.config.tube_radius)
+                        .extend(player.pos.z);
+                    self.bounce_particles.vel = (-player.pos.xy().normalize()
+                        * self.ctx.config.bounce_particle_speed)
+                        .extend(player.vel.z);
+                    for _ in 0..self.ctx.config.bounce_particles {
+                        self.bounce_particles.spawn();
+                    }
                 }
             }
 
