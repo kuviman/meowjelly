@@ -31,6 +31,7 @@ struct Assets {
 pub struct Config {
     pub movement: Rc<SpawnerConfig>,
     pub bounce: Rc<SpawnerConfig>,
+    pub death: Rc<SpawnerConfig>,
 }
 
 #[derive(Deserialize)]

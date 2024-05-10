@@ -627,10 +627,11 @@ impl geng::State for GameState {
                 false
             };
             if died {
-                self.bounce_particles.pos = player.pos;
-                self.bounce_particles.vel = vec3::ZERO;
+                let mut spawner = self.ctx.particles.spawner(&self.ctx.particles.config.death);
+                spawner.pos = player.pos;
+                spawner.vel = vec3::ZERO;
                 for _ in 0..self.ctx.config.bounce_particles {
-                    self.bounce_particles.spawn();
+                    spawner.spawn();
                 }
                 self.death_location = Some(player.pos);
                 self.player = None;
