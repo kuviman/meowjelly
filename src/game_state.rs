@@ -438,9 +438,11 @@ impl geng::State for GameState {
 
             // gravity
             if self.started.is_some() {
-                player.vel.z = (player.vel.z
-                    - self.ctx.config.player.fall_acceleration * delta_time)
-                    .clamp_abs(self.ctx.config.player.fall_speed);
+                player.vel.z -= if player.vel.z.abs() > self.ctx.config.player.fall_speed {
+                    self.ctx.config.player.fall_slow_acceleration
+                } else {
+                    self.ctx.config.player.fall_acceleration
+                } * delta_time;
             }
 
             // collision with the tube

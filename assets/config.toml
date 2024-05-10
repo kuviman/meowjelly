@@ -35,6 +35,7 @@ max_speed = 30
 acceleration = 300
 fall_speed = 100
 fall_acceleration = 10
+fall_slow_acceleration = 1
 radius = 1
 bounce_speed = 50
 bounce_time = 2

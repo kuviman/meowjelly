@@ -13,6 +13,7 @@ pub struct Camera {
 pub struct Player {
     pub fall_speed: f32,
     pub fall_acceleration: f32,
+    pub fall_slow_acceleration: f32,
     pub max_speed: f32,
     pub acceleration: f32,
     pub radius: f32,
