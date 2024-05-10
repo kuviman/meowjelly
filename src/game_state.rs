@@ -477,7 +477,8 @@ impl geng::State for GameState {
                 control(&self.ctx.controls.player.right, 1.0, 0.0);
                 target_vel.clamp_len(..=1.0) * self.ctx.config.player.max_speed
             };
-            if self.started.is_none() && target_vel != vec2::ZERO {
+            if self.started.is_none() && (target_vel != vec2::ZERO || self.touch_control.is_some())
+            {
                 self.started = Some(0.0);
             }
             let target_vel = target_vel * self.started.unwrap_or(0.0).min(1.0);
