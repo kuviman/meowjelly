@@ -10,6 +10,7 @@ pub struct Render {
     cylinder: ugli::VertexBuffer<Vertex>,
     quad: ugli::VertexBuffer<Vertex>,
     assets: Assets,
+    pub player: Cell<Option<(vec3<f32>, f32)>>,
     pub config: Config,
     pub white_texture: ugli::Texture,
 }
@@ -69,6 +70,7 @@ impl Render {
                 .collect(),
         );
         Self {
+            player: Cell::new(None),
             cylinder,
             quad,
             assets,
@@ -114,6 +116,7 @@ impl Render {
         depth_test: bool,
     ) {
         let framebuffer_size = framebuffer.size().map(|x| x as f32);
+        let (player_pos, player_radius) = self.player.get().unwrap_or((vec3::ZERO, 0.0));
         ugli::draw(
             framebuffer,
             &self.assets.shaders.texture,
@@ -128,6 +131,8 @@ impl Render {
                     u_fog_color: self.config.fog_color,
                     u_fog_distance: self.config.fog_distance,
                     u_color: color,
+                    u_player_pos: player_pos,
+                    u_player_radius: player_radius,
                 },
                 camera.uniforms(framebuffer_size),
             ),
@@ -166,6 +171,7 @@ impl Render {
         model_matrix: mat4<f32>,
         uv_matrix: mat3<f32>,
     ) {
+        let (player_pos, player_radius) = self.player.get().unwrap_or((vec3::ZERO, 0.0));
         let framebuffer_size = framebuffer.size().map(|x| x as f32);
         ugli::draw(
             framebuffer,
@@ -181,6 +187,8 @@ impl Render {
                     u_fog_color: self.config.fog_color,
                     u_fog_distance: self.config.fog_distance,
                     u_color: Rgba::WHITE,
+                    u_player_pos: player_pos,
+                    u_player_radius: player_radius,
                 },
                 camera.uniforms(framebuffer_size),
             ),
