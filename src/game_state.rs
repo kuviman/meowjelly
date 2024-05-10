@@ -7,6 +7,7 @@ struct Player {
     radius: f32,
     vel: vec3<f32>,
     move_particles: ParticleSpawner,
+    leg_rot: Angle<f32>,
 }
 
 struct CameraShake {
@@ -99,6 +100,7 @@ impl GameState {
                 },
             },
             player: Some(Player {
+                leg_rot: Angle::ZERO,
                 pos: vec3::ZERO,
                 vel: vec3::ZERO,
                 radius: ctx.config.player.radius,
@@ -235,10 +237,8 @@ impl geng::State for GameState {
                         std::array::from_fn(|_| rng.gen())
                     });
                 let texture = &self.ctx.assets.player.leg;
-                let v = vec2(self.ctx.config.legs.length, 0.0).rotate(Angle::from_degrees(
-                    360.0 * leg as f32 / LEGS as f32
-                        + self.time * self.ctx.config.legs.rotate_speed,
-                ));
+                let v = vec2(self.ctx.config.legs.length, 0.0)
+                    .rotate(Angle::from_degrees(360.0 * leg as f32 / LEGS as f32) + player.leg_rot);
                 let v = v + vec2(self.ctx.config.legs.wiggle, 0.0).rotate(Angle::from_degrees(
                     (self.time * self.ctx.config.legs.freq + PHASES[leg]) * 360.0,
                 ));
@@ -397,6 +397,12 @@ impl geng::State for GameState {
                     .move_delta
                     .clamp_len(..=self.ctx.config.touch_control.big_radius);
             }
+
+            player.leg_rot += Angle::from_degrees(
+                self.ctx.config.legs.rotate_speed * player.vel.xy().len()
+                    / self.ctx.config.player.max_speed
+                    * delta_time,
+            );
 
             // camera
             self.camera.pos = (player.pos.xy() * self.ctx.config.camera.horizontal_movement)
