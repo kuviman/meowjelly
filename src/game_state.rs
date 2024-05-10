@@ -658,6 +658,8 @@ impl geng::State for GameState {
                 texture_shift: thread_rng().gen(),
             });
         }
+        self.walls
+            .retain(|wall| wall.range.end < self.camera.pos.z + 10.0);
         while self.obstacles.last().map_or(true, |last| last.z > far) {
             let z = self.obstacles.last().map_or(0.0, |last| last.z)
                 - thread_rng().gen_range(self.ctx.config.obstacles.distance.range());
@@ -697,6 +699,8 @@ impl geng::State for GameState {
                 data,
             });
         }
+        self.obstacles
+            .retain(|obstacle| obstacle.z < self.camera.pos.z + 10.0);
     }
     fn handle_event(&mut self, event: geng::Event) {
         match event {
