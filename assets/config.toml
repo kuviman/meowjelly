@@ -7,12 +7,13 @@ bounce_particle_speed = 10
 death_distance = 2
 
 [tutorial]
-scale = 0.015
+scale = 0.001
 touch_pos = [0, -1.5, 0]
-wasd_pos = [-2, 1.5, 0]
-arrows_pos = [2, 1.5, 0]
+wasd_pos = [-1, 1.5, 0]
+arrows_pos = [1, 1.5, 0]
 r_pos = [0, 1.5, 0]
 touch_restart_pos = [0, -1.5, 0]
+final_scale = 0.002
 
 [obstacles]
 distance = { min = 50, max = 150 }
@@ -59,6 +60,6 @@ big_radius = 10
 [camera]
 horizontal_movement = 0.75
 distance = 10
-acceleration = 40
+acceleration = 300
 fov = 70
 start_fov = 30

@@ -403,7 +403,7 @@ impl geng::State for GameState {
                     mat4::translate(pos.extend(-self.ctx.config.camera.distance) + self.camera.pos)
                         * mat4::scale(
                             texture.size().map(|x| x as f32).extend(1.0)
-                                * self.ctx.config.tutorial.scale,
+                                * self.ctx.config.tutorial.final_scale,
                         ),
                     Rgba::new(1.0, 1.0, 1.0, alpha),
                     false,
@@ -427,7 +427,8 @@ impl geng::State for GameState {
         {
             let t = partial_min(
                 self.started.unwrap_or(0.0).clamp(0.0, 1.0),
-                (1.0 - self.finished.unwrap_or(0.0)).clamp(0.0, 1.0),
+                1.0,
+                // (1.0 - self.finished.unwrap_or(0.0)).clamp(0.0, 1.0),
             );
             self.camera.fov = Angle::from_degrees(
                 t * self.ctx.config.camera.fov + (1.0 - t) * self.ctx.config.camera.start_fov,
