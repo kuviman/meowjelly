@@ -209,6 +209,12 @@ impl GameState {
 
 impl geng::State for GameState {
     fn draw(&mut self, framebuffer: &mut ugli::Framebuffer) {
+        self.ctx.render.player.set(
+            self.player
+                .as_ref()
+                .map(|player| (player.pos, player.radius)),
+        );
+
         self.framebuffer_size = framebuffer.size().map(|x| x as f32);
         ugli::clear(
             framebuffer,
@@ -246,12 +252,6 @@ impl geng::State for GameState {
         self.ctx.render.color_overlay(
             framebuffer,
             Rgba::new(0.0, 0.0, 0.0, self.finished.unwrap_or(0.0).min(1.0)),
-        );
-
-        self.ctx.render.player.set(
-            self.player
-                .as_ref()
-                .map(|player| (player.pos, player.radius)),
         );
 
         if let Some(player) = &self.player {
