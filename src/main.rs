@@ -7,6 +7,9 @@ mod ctx;
 mod game_state;
 mod particles;
 mod render;
+mod easings;
+
+use easings::*;
 
 use ctx::Ctx;
 

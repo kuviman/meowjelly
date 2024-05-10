@@ -2,6 +2,7 @@ use super::*;
 
 #[derive(geng::asset::Load)]
 pub struct Player {
+    pub death: ugli::Texture,
     pub head: ugli::Texture,
     pub leg: ugli::Texture,
     pub shadow: ugli::Texture,

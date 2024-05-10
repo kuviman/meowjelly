@@ -95,10 +95,12 @@ impl Obstacle {
 
 pub struct GameState {
     framebuffer_size: vec2<f32>,
+    death_rotation: Angle<f32>,
     ctx: Ctx,
     time: f32,
     camera: Camera,
     player: Option<Player>,
+    death_location: Option<vec3<f32>>,
     transition: Option<geng::state::Transition>,
     walls: Vec<Wall>,
     obstacles: Vec<Obstacle>,
@@ -118,6 +120,7 @@ impl GameState {
             time: 0.0,
             obstacles: Vec::new(),
             framebuffer_size: vec2::splat(1.0),
+            death_location: None,
             camera: Camera {
                 pos: vec3::ZERO,
                 fov: Angle::from_degrees(ctx.config.camera.start_fov),
@@ -129,6 +132,7 @@ impl GameState {
                     amount: 0.0,
                 },
             },
+            death_rotation: Angle::ZERO,
             player: Some(Player {
                 leg_rot: Angle::ZERO,
                 pos: vec3::ZERO,
@@ -272,17 +276,6 @@ impl geng::State for GameState {
                     + self.time * self.ctx.config.passive_rotation.speed,
             ));
             if let Some(bounce) = &self.bounce {
-                /// https://easings.net/#easeOutElastic
-                fn ease_out_elastic(x: f32) -> f32 {
-                    if x == 0.0 {
-                        return 0.0;
-                    }
-                    if x == 1.0 {
-                        return 1.0;
-                    }
-                    let c4 = 2.0 * f32::PI / 3.0;
-                    2.0.powf(-10.0 * x) * ((x * 10.0 - 0.75) * c4).sin() + 1.0
-                }
                 transform *= mat4::rotate(
                     bounce.axis,
                     Angle::from_degrees(360.0 * ease_out_elastic(bounce.t)),
@@ -347,6 +340,28 @@ impl geng::State for GameState {
         }
 
         self.ctx.particles.draw(framebuffer, &self.camera);
+
+        if let Some(location) = self.death_location {
+            let t = self.finished.unwrap_or(0.0).min(1.0);
+            let t = ease_out_elastic(t);
+            self.ctx.render.sprite_ext(
+                framebuffer,
+                &self.camera,
+                &self.ctx.assets.player.death,
+                mat4::translate(
+                    location * (1.0 - t)
+                        + self
+                            .camera
+                            .pos
+                            .xy()
+                            .extend(self.camera.pos.z - self.ctx.config.camera.distance)
+                            * t,
+                ) * mat4::scale_uniform(self.ctx.config.player.death_radius)
+                    * mat4::rotate_z(self.death_rotation),
+                Rgba::WHITE,
+                false,
+            );
+        }
 
         // tutorial
         {
@@ -592,7 +607,14 @@ impl geng::State for GameState {
                 false
             };
             if died {
+                self.bounce_particles.pos = player.pos;
+                self.bounce_particles.vel = vec3::ZERO;
+                for _ in 0..self.ctx.config.bounce_particles {
+                    self.bounce_particles.spawn();
+                }
+                self.death_location = Some(player.pos);
                 self.player = None;
+                self.death_rotation = thread_rng().gen();
                 self.shake_time = self.ctx.config.shake.time;
             } else {
                 // bounce
