@@ -127,6 +127,7 @@ impl Render {
         framebuffer: &mut ugli::Framebuffer,
         camera: &dyn AbstractCamera3d,
         texture: &ugli::Texture,
+        texture_shift: f32,
         z: Range<f32>,
         radius: f32,
     ) {
@@ -135,7 +136,7 @@ impl Render {
         let uv_matrix = mat3::scale(vec2(
             1.0,
             texture.size().map(|x| x as f32).aspect() / (2.0 * f32::PI * radius),
-        )) * mat3::translate(vec2(0.0, z.start))
+        )) * mat3::translate(vec2(texture_shift, 0.0))
             * mat3::scale(vec2(1.0, z.end - z.start));
         self.cylinder_ext(framebuffer, camera, texture, model_matrix, uv_matrix);
     }

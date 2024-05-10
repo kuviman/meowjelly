@@ -49,7 +49,9 @@ impl geng::AbstractCamera3d for Camera {
 }
 
 struct Wall {
+    texture: Rc<ugli::Texture>,
     range: Range<f32>,
+    texture_shift: f32,
 }
 
 struct TouchControl {
@@ -200,7 +202,8 @@ impl geng::State for GameState {
             self.ctx.render.cylinder(
                 framebuffer,
                 &self.camera,
-                &self.ctx.assets.walls.brick,
+                &wall.texture,
+                wall.texture_shift,
                 wall.range.clone(),
                 self.ctx.config.tube_radius,
             );
@@ -531,9 +534,19 @@ impl geng::State for GameState {
         let far = self.camera.pos.z - self.camera.far;
         while self.walls.last().map_or(true, |last| last.range.end > far) {
             let start = self.walls.last().map_or(0.0, |last| last.range.end);
-            let len = self.ctx.config.wall_section;
+            let texture = self
+                .ctx
+                .assets
+                .walls
+                .choose(&mut thread_rng())
+                .unwrap()
+                .clone();
+            let len = 2.0 * f32::PI * self.ctx.config.tube_radius
+                / texture.size().map(|x| x as f32).aspect();
             self.walls.push(Wall {
+                texture,
                 range: start..start - len,
+                texture_shift: thread_rng().gen(),
             });
         }
         while self.obstacles.last().map_or(true, |last| last.z > far) {
@@ -547,12 +560,16 @@ impl geng::State for GameState {
                 .unwrap()
                 .clone();
             let mut aspect = texture.size().map(|x| x as f32).aspect();
-            let mut transform = mat4::scale(vec3(aspect, 1.0, 1.0) * self.ctx.config.tube_radius);
+            let mut transform = mat4::identity();
             if aspect >= 1.0 {
-                transform = mat4::rotate_z(Angle::from_degrees(90.0)) * transform;
+                // transform *= mat4::rotate_z(Angle::from_degrees(90.0));
                 aspect = 1.0 / aspect;
             }
-            transform = mat4::rotate_x(Angle::from_radians(aspect.acos())) * transform;
+            transform =
+                mat4::scale(vec3(1.0, 1.0 / aspect, 1.0) * self.ctx.config.tube_radius) * transform;
+            transform = mat4::rotate_x(Angle::from_radians(
+                aspect.acos() * if thread_rng().gen() { -1.0 } else { 1.0 },
+            )) * transform;
             transform = mat4::rotate_z(thread_rng().gen()) * transform;
 
             let fb = ugli::FramebufferRead::new_color(
