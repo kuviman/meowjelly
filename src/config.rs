@@ -91,6 +91,7 @@ pub struct Tutorial {
 pub struct Config {
     pub tutorial: Tutorial,
     pub start_time: f32,
+    pub finish_time: f32,
     pub death_distance: f32,
     pub legs: Legs,
     pub shake: Shake,

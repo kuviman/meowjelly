@@ -422,7 +422,7 @@ impl geng::State for GameState {
             self.finished = Some(0.0);
         }
         if let Some(time) = &mut self.finished {
-            *time += delta_time / self.ctx.config.start_time;
+            *time += delta_time / self.ctx.config.finish_time;
         }
         {
             let t = partial_min(

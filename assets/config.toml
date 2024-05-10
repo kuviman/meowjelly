@@ -1,4 +1,5 @@
 start_time = 0.5
+finish_time = 1
 tube_radius = 10
 wall_section = 10
 bounce_particles = 10
