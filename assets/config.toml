@@ -57,7 +57,7 @@ small_radius = 3
 big_radius = 10
 
 [camera]
-horizontal_movement = 0.5
+horizontal_movement = 0.75
 distance = 10
 acceleration = 40
 fov = 70
