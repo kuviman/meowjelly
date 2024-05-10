@@ -9,8 +9,11 @@ pub struct Player {
 
 #[derive(geng::asset::Load)]
 pub struct Tutorial {
-    pub keyboard: ugli::Texture,
+    pub wasd: ugli::Texture,
+    pub arrows: ugli::Texture,
     pub touch: ugli::Texture,
+    pub r: ugli::Texture,
+    pub touch_restart: ugli::Texture,
 }
 
 #[derive(geng::asset::Load)]

@@ -107,12 +107,14 @@ pub struct GameState {
     bounce_particles: ParticleSpawner,
     shake_time: f32,
     started: Option<f32>,
+    finished: Option<f32>,
 }
 
 impl GameState {
     pub fn new(ctx: &Ctx) -> Self {
         Self {
             ctx: ctx.clone(),
+            finished: None,
             time: 0.0,
             obstacles: Vec::new(),
             framebuffer_size: vec2::splat(1.0),
@@ -144,12 +146,16 @@ impl GameState {
         }
     }
 
+    fn restart(&mut self) {
+        *self = Self::new(&self.ctx);
+    }
+
     fn key_press(&mut self, key: geng::Key) {
         if self.ctx.controls.quit.contains(&key) {
             self.transition = Some(geng::state::Transition::Pop);
         }
         if self.ctx.controls.restart.contains(&key) {
-            *self = Self::new(&self.ctx);
+            self.restart();
         }
     }
 
@@ -223,6 +229,10 @@ impl geng::State for GameState {
         self.ctx.render.color_overlay(
             framebuffer,
             Rgba::new(0.0, 0.0, 0.0, 1.0 - self.started.unwrap_or(0.0).min(1.0)),
+        );
+        self.ctx.render.color_overlay(
+            framebuffer,
+            Rgba::new(0.0, 0.0, 0.0, self.finished.unwrap_or(0.0).min(1.0)),
         );
 
         if let Some(player) = &self.player {
@@ -347,8 +357,12 @@ impl geng::State for GameState {
                     self.ctx.config.tutorial.touch_pos,
                 ),
                 (
-                    &self.ctx.assets.tutorial.keyboard,
-                    self.ctx.config.tutorial.keyboard_pos,
+                    &self.ctx.assets.tutorial.wasd,
+                    self.ctx.config.tutorial.wasd_pos,
+                ),
+                (
+                    &self.ctx.assets.tutorial.arrows,
+                    self.ctx.config.tutorial.arrows_pos,
                 ),
             ] {
                 // let mut pos = pos;
@@ -359,7 +373,34 @@ impl geng::State for GameState {
                     framebuffer,
                     &self.camera,
                     texture,
-                    mat4::translate(pos)
+                    mat4::translate(pos.extend(0.0))
+                        * mat4::scale(
+                            texture.size().map(|x| x as f32).extend(1.0)
+                                * self.ctx.config.tutorial.scale,
+                        ),
+                    Rgba::new(1.0, 1.0, 1.0, alpha),
+                    false,
+                );
+            }
+        }
+        {
+            let alpha = self.finished.unwrap_or(0.0);
+            for (texture, pos) in [
+                (&self.ctx.assets.tutorial.r, self.ctx.config.tutorial.r_pos),
+                (
+                    &self.ctx.assets.tutorial.touch_restart,
+                    self.ctx.config.tutorial.touch_restart_pos,
+                ),
+            ] {
+                // let mut pos = pos;
+                // if self.framebuffer_size.aspect() > 1.0 {
+                //     pos = pos.xy().rotate_90().extend(pos.z);
+                // }
+                self.ctx.render.sprite_ext(
+                    framebuffer,
+                    &self.camera,
+                    texture,
+                    mat4::translate(pos.extend(-self.ctx.config.camera.distance) + self.camera.pos)
                         * mat4::scale(
                             texture.size().map(|x| x as f32).extend(1.0)
                                 * self.ctx.config.tutorial.scale,
@@ -377,8 +418,17 @@ impl geng::State for GameState {
         if let Some(time) = &mut self.started {
             *time += delta_time / self.ctx.config.start_time;
         }
+        if self.finished.is_none() && self.player.is_none() {
+            self.finished = Some(0.0);
+        }
+        if let Some(time) = &mut self.finished {
+            *time += delta_time / self.ctx.config.start_time;
+        }
         {
-            let t = self.started.unwrap_or(0.0).clamp(0.0, 1.0);
+            let t = partial_min(
+                self.started.unwrap_or(0.0).clamp(0.0, 1.0),
+                (1.0 - self.finished.unwrap_or(0.0)).clamp(0.0, 1.0),
+            );
             self.camera.fov = Angle::from_degrees(
                 t * self.ctx.config.camera.fov + (1.0 - t) * self.ctx.config.camera.start_fov,
             );
@@ -650,9 +700,15 @@ impl geng::State for GameState {
     fn handle_event(&mut self, event: geng::Event) {
         match event {
             geng::Event::KeyPress { key } => {
+                if self.finished.unwrap_or(0.0) > 1.0 {
+                    self.restart();
+                }
                 self.key_press(key);
             }
             geng::Event::MousePress { .. } => {
+                if self.finished.unwrap_or(0.0) > 1.0 {
+                    self.restart();
+                }
                 if let Some(pos) = self.ctx.geng.window().cursor_position() {
                     self.touch_start(pos);
                 }
@@ -664,6 +720,9 @@ impl geng::State for GameState {
                 self.touch_end();
             }
             geng::Event::TouchStart(touch) => {
+                if self.finished.unwrap_or(0.0) > 1.0 {
+                    self.restart();
+                }
                 self.touch_start(touch.position);
             }
             geng::Event::TouchMove(touch) => {

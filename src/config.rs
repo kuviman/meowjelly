@@ -80,8 +80,11 @@ pub struct Legs {
 #[derive(Deserialize)]
 pub struct Tutorial {
     pub scale: f32,
-    pub touch_pos: vec3<f32>,
-    pub keyboard_pos: vec3<f32>,
+    pub touch_pos: vec2<f32>,
+    pub wasd_pos: vec2<f32>,
+    pub arrows_pos: vec2<f32>,
+    pub touch_restart_pos: vec2<f32>,
+    pub r_pos: vec2<f32>,
 }
 
 #[derive(Deserialize)]
