@@ -59,6 +59,12 @@ struct Bounce {
     axis: vec3<f32>,
 }
 
+struct Obstacle {
+    z: f32,
+    transform: mat4<f32>,
+    texture: Rc<ugli::Texture>,
+}
+
 pub struct GameState {
     framebuffer_size: vec2<f32>,
     ctx: Ctx,
@@ -67,6 +73,7 @@ pub struct GameState {
     player: Option<Player>,
     transition: Option<geng::state::Transition>,
     walls: Vec<Wall>,
+    obstacles: Vec<Obstacle>,
     touch_control: Option<TouchControl>,
     bounce: Option<Bounce>,
     bounce_particles: ParticleSpawner,
@@ -78,6 +85,7 @@ impl GameState {
         Self {
             ctx: ctx.clone(),
             time: 0.0,
+            obstacles: Vec::new(),
             framebuffer_size: vec2::splat(1.0),
             camera: Camera {
                 pos: vec3::ZERO,
@@ -278,6 +286,15 @@ impl geng::State for GameState {
             }
         }
 
+        for obstacle in self.obstacles.iter().rev() {
+            self.ctx.render.sprite(
+                framebuffer,
+                &self.camera,
+                &obstacle.texture,
+                mat4::translate(vec3(0.0, 0.0, obstacle.z)) * obstacle.transform,
+            );
+        }
+
         self.ctx.particles.draw(framebuffer, &self.camera);
     }
     fn update(&mut self, delta_time: f64) {
@@ -399,6 +416,30 @@ impl geng::State for GameState {
             let len = self.ctx.config.wall_section;
             self.walls.push(Wall {
                 range: start..start - len,
+            });
+        }
+        while self.obstacles.last().map_or(true, |last| last.z > far) {
+            let z = self.obstacles.last().map_or(0.0, |last| last.z)
+                - thread_rng().gen_range(self.ctx.config.obstacles.distance.range());
+            let texture = self
+                .ctx
+                .assets
+                .obstacles
+                .choose(&mut thread_rng())
+                .unwrap()
+                .clone();
+            let mut aspect = texture.size().map(|x| x as f32).aspect();
+            let mut transform = mat4::scale(vec3(aspect, 1.0, 1.0) * self.ctx.config.tube_radius);
+            if aspect >= 1.0 {
+                transform = mat4::rotate_z(Angle::from_degrees(90.0)) * transform;
+                aspect = 1.0 / aspect;
+            }
+            transform = mat4::rotate_x(Angle::from_radians(aspect.acos())) * transform;
+            transform = mat4::rotate_z(thread_rng().gen()) * transform;
+            self.obstacles.push(Obstacle {
+                z,
+                transform,
+                texture,
             });
         }
     }

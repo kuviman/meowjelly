@@ -3,6 +3,9 @@ wall_section = 10
 bounce_particles = 10
 bounce_particle_speed = 10
 
+[obstacles]
+distance = { min = 50, max = 150 }
+
 [legs]
 length = 0.7
 wiggle = 0.04

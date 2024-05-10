@@ -16,5 +16,7 @@ pub struct Player {
 #[derive(geng::asset::Load)]
 pub struct Assets {
     pub walls: Walls,
+    #[load(listed_in = "_list.ron")]
+    pub obstacles: Vec<Rc<ugli::Texture>>,
     pub player: Player,
 }

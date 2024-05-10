@@ -49,6 +49,23 @@ pub struct Shake {
 }
 
 #[derive(Deserialize)]
+pub struct MinMax<T> {
+    pub min: T,
+    pub max: T,
+}
+
+impl<T: Copy> MinMax<T> {
+    pub fn range(&self) -> RangeInclusive<T> {
+        self.min..=self.max
+    }
+}
+
+#[derive(Deserialize)]
+pub struct Obstacles {
+    pub distance: MinMax<f32>,
+}
+
+#[derive(Deserialize)]
 pub struct Legs {
     pub length: f32,
     pub wiggle: f32,
@@ -70,4 +87,5 @@ pub struct Config {
     pub player: Player,
     pub passive_rotation: PassiveRotation,
     pub touch_control: TouchControl,
+    pub obstacles: Obstacles,
 }
