@@ -94,6 +94,7 @@ impl Obstacle {
 }
 
 pub struct GameState {
+    key_input: bool,
     framebuffer_size: vec2<f32>,
     death_rotation: Angle<f32>,
     ctx: Ctx,
@@ -132,6 +133,7 @@ impl GameState {
                     amount: 0.0,
                 },
             },
+            key_input: false,
             death_rotation: Angle::ZERO,
             player: Some(Player {
                 leg_rot: Angle::ZERO,
@@ -155,10 +157,14 @@ impl GameState {
     }
 
     fn key_press(&mut self, key: geng::Key) {
+        self.key_input = true;
         if self.ctx.controls.quit.contains(&key) {
             self.transition = Some(geng::state::Transition::Pop);
         }
         if self.ctx.controls.restart.contains(&key) {
+            self.restart();
+        }
+        if self.finished.unwrap_or(0.0) > 1.0 {
             self.restart();
         }
     }
@@ -168,6 +174,9 @@ impl GameState {
             move_delta: vec2::ZERO,
             prev_pos: pos,
         });
+        if self.finished.unwrap_or(0.0) > 1.0 {
+            self.restart();
+        }
     }
 
     fn raycast(&self, window_pos: vec2<f64>) -> vec2<f32> {
@@ -487,10 +496,12 @@ impl geng::State for GameState {
                         target_vel += vec2(x, y);
                     }
                 };
-                control(&self.ctx.controls.player.up, 0.0, 1.0);
-                control(&self.ctx.controls.player.left, -1.0, 0.0);
-                control(&self.ctx.controls.player.down, 0.0, -1.0);
-                control(&self.ctx.controls.player.right, 1.0, 0.0);
+                if self.key_input {
+                    control(&self.ctx.controls.player.up, 0.0, 1.0);
+                    control(&self.ctx.controls.player.left, -1.0, 0.0);
+                    control(&self.ctx.controls.player.down, 0.0, -1.0);
+                    control(&self.ctx.controls.player.right, 1.0, 0.0);
+                }
                 target_vel.clamp_len(..=1.0) * self.ctx.config.player.max_speed
             };
             if self.started.is_none() && (target_vel != vec2::ZERO || self.touch_control.is_some())
@@ -728,15 +739,9 @@ impl geng::State for GameState {
     fn handle_event(&mut self, event: geng::Event) {
         match event {
             geng::Event::KeyPress { key } => {
-                if self.finished.unwrap_or(0.0) > 1.0 {
-                    self.restart();
-                }
                 self.key_press(key);
             }
             geng::Event::MousePress { .. } => {
-                if self.finished.unwrap_or(0.0) > 1.0 {
-                    self.restart();
-                }
                 if let Some(pos) = self.ctx.geng.window().cursor_position() {
                     self.touch_start(pos);
                 }
@@ -748,9 +753,6 @@ impl geng::State for GameState {
                 self.touch_end();
             }
             geng::Event::TouchStart(touch) => {
-                if self.finished.unwrap_or(0.0) > 1.0 {
-                    self.restart();
-                }
                 self.touch_start(touch.position);
             }
             geng::Event::TouchMove(touch) => {
