@@ -64,6 +64,29 @@ struct Obstacle {
     z: f32,
     transform: mat4<f32>,
     texture: Rc<ugli::Texture>,
+    data: Vec<Vec<Rgba<u8>>>,
+}
+
+impl Obstacle {
+    /// Returns signed distance if vertical ray hits
+    fn hittest(&self, pos: vec3<f32>) -> Option<f32> {
+        let inv = (mat4::translate(vec3(0.0, 0.0, self.z)) * self.transform).inverse();
+        let from = (inv * pos.extend(1.0)).xyz();
+        let dir = (inv * vec4(0.0, 0.0, 1.0, 0.0)).xyz();
+        // from + dir * t = 0
+        let t = -from.z / dir.z;
+        let vec2(x, y) = (from.xy() + dir.xy() * t).map(|x| x * 0.5 + 0.5);
+        if x < 0.0 || y < 0.0 || x > 1.0 || y > 1.0 {
+            return None;
+        }
+        let x = (x * self.data.len() as f32).floor() as usize;
+        let y = (y * self.data[0].len() as f32).floor() as usize;
+        let color = self.data.get(x)?.get(y)?;
+        if color.a == 0 {
+            return None;
+        }
+        Some(t)
+    }
 }
 
 pub struct GameState {
@@ -408,8 +431,83 @@ impl geng::State for GameState {
             self.camera.pos = (player.pos.xy() * self.ctx.config.camera.horizontal_movement)
                 .extend(player.pos.z + self.ctx.config.camera.distance);
             self.camera.vel = player.vel;
+
+            // collisions
+            let hitted_at = |local: vec2<f32>| -> bool {
+                let local = local.extend(0.0) * player.radius;
+                for obstacle in &self.obstacles {
+                    let Some(prev) = obstacle.hittest(prev_pos + local) else {
+                        continue;
+                    };
+                    let Some(new) = obstacle.hittest(player.pos + local) else {
+                        continue;
+                    };
+                    if prev * new <= 0.0 {
+                        return true;
+                    }
+                }
+                false
+            };
+
+            // death
+            let died = 'died: {
+                for obstacle in &self.obstacles {
+                    let Some(prev) = obstacle.hittest(prev_pos) else {
+                        continue;
+                    };
+                    let Some(new) = obstacle.hittest(player.pos) else {
+                        continue;
+                    };
+                    if new * prev <= 0.0 || new.abs().min(prev.abs()) < self.ctx.config.death_distance {
+                        break 'died true;
+                    }
+                }
+                false
+            };
+            if died {
+                self.player = None;
+                self.shake_time = self.ctx.config.shake.time;
+            } else {
+                // bounce
+                const CHECKS: usize = 10;
+                for i in 0..CHECKS {
+                    let angle = 2.0 * f32::PI * i as f32 / CHECKS as f32;
+                    let (sin, cos) = angle.sin_cos();
+                    let v = vec2(sin, cos);
+                    if hitted_at(v) {
+                        let normal = -v;
+                        let normal_vel = vec2::dot(player.vel.xy(), normal);
+                        let change = (self.ctx.config.player.bounce_speed - normal_vel) * normal;
+                        player.vel += change.extend(0.0);
+                        let mut rng = thread_rng();
+                        self.bounce = Some(Bounce {
+                            t: 0.0,
+                            axis: vec3(
+                                rng.gen_range(-1.0..1.0),
+                                rng.gen_range(-1.0..1.0),
+                                rng.gen_range(-1.0..1.0),
+                            )
+                            .normalize_or_zero(),
+                        });
+                        self.bounce_particles.pos = player.pos;
+                        self.bounce_particles.vel =
+                            (v * self.ctx.config.bounce_particle_speed).extend(player.vel.z);
+                        for _ in 0..self.ctx.config.bounce_particles {
+                            self.bounce_particles.spawn();
+                        }
+                        self.shake_time = self.ctx.config.shake.time;
+                        break;
+                    }
+                }
+            }
         } else {
             self.camera.pos += self.camera.vel * delta_time;
+            self.camera.pos = self
+                .camera
+                .pos
+                .xy()
+                .clamp_len(..=self.ctx.config.tube_radius - self.ctx.config.player.radius)
+                .extend(self.camera.pos.z);
             self.camera.vel -= self
                 .camera
                 .vel
@@ -442,10 +540,21 @@ impl geng::State for GameState {
             }
             transform = mat4::rotate_x(Angle::from_radians(aspect.acos())) * transform;
             transform = mat4::rotate_z(thread_rng().gen()) * transform;
+
+            let fb = ugli::FramebufferRead::new_color(
+                self.ctx.geng.ugli(),
+                ugli::ColorAttachmentRead::Texture(&texture),
+            );
+            let data = fb.read_color();
+            let data = (0..texture.size().x)
+                .map(|x| (0..texture.size().y).map(|y| data.get(x, y)).collect())
+                .collect();
+
             self.obstacles.push(Obstacle {
                 z,
                 transform,
                 texture,
+                data,
             });
         }
     }

@@ -76,6 +76,7 @@ pub struct Legs {
 
 #[derive(Deserialize)]
 pub struct Config {
+    pub death_distance: f32,
     pub legs: Legs,
     pub shake: Shake,
     pub bounce_particles: usize,
