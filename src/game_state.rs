@@ -10,12 +10,14 @@ struct Player {
     leg_rot: Angle<f32>,
 }
 
+#[derive(Debug)]
 struct CameraShake {
     next: f32,
     offset: vec2<f32>,
     amount: f32,
 }
 
+#[derive(Debug)]
 struct Camera {
     pos: vec3<f32>,
     shake: CameraShake,
@@ -160,7 +162,12 @@ impl GameState {
             .pixel_ray(self.framebuffer_size, window_pos.map(|x| x as f32));
         let z = self.camera.pos.z - self.ctx.config.camera.distance;
         let t = (z - ray.from.z) / ray.dir.z;
-        (ray.from + ray.dir * t).xy()
+        let result = (ray.from + ray.dir * t).xy();
+        log::trace!(
+            "camera: {camera:#?} raycast from {window_pos} = {result}",
+            camera = self.camera,
+        );
+        result
     }
 
     fn touch_move(&mut self, pos: vec2<f64>) {
@@ -368,6 +375,7 @@ impl geng::State for GameState {
                 control(&self.ctx.controls.player.right, 1.0, 0.0);
                 target_vel.clamp_len(..=1.0) * self.ctx.config.player.max_speed
             };
+            assert!(target_vel.x.is_finite());
             player.vel += (target_vel - player.vel.xy())
                 .clamp_len(..=self.ctx.config.player.acceleration * delta_time)
                 .extend(0.0);
@@ -412,13 +420,17 @@ impl geng::State for GameState {
             let prev_pos = player.pos;
             player.pos += player.vel * delta_time;
             if let Some(touch) = &mut self.touch_control {
-                let performed = (player.pos - prev_pos).xy() * 0.5;
-                touch.move_delta = touch
-                    .move_delta
-                    .clamp_len(..=touch.move_delta.len() - performed.len());
-                touch.move_delta = touch
-                    .move_delta
-                    .clamp_len(..=self.ctx.config.touch_control.big_radius);
+                if touch.move_delta.len() < 1e-3 {
+                    touch.move_delta = vec2::ZERO;
+                } else {
+                    let performed = (player.pos - prev_pos).xy() * 0.5; // TODO: why 0.5???
+                    touch.move_delta = touch
+                        .move_delta
+                        .clamp_len(..=touch.move_delta.len() - performed.len());
+                    touch.move_delta = touch
+                        .move_delta
+                        .clamp_len(..=self.ctx.config.touch_control.big_radius);
+                }
             }
 
             player.leg_rot += Angle::from_degrees(
@@ -458,7 +470,9 @@ impl geng::State for GameState {
                     let Some(new) = obstacle.hittest(player.pos) else {
                         continue;
                     };
-                    if new * prev <= 0.0 || new.abs().min(prev.abs()) < self.ctx.config.death_distance {
+                    if new * prev <= 0.0
+                        || new.abs().min(prev.abs()) < self.ctx.config.death_distance
+                    {
                         break 'died true;
                     }
                 }
