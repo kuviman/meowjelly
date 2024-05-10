@@ -1,8 +1,14 @@
+start_time = 0.5
 tube_radius = 10
 wall_section = 10
 bounce_particles = 10
 bounce_particle_speed = 10
 death_distance = 2
+
+[tutorial]
+scale = 0.015
+touch_pos = [0, -1.5, 0]
+keyboard_pos = [0, 2, 0]
 
 [obstacles]
 distance = { min = 50, max = 150 }
@@ -49,3 +55,5 @@ big_radius = 10
 horizontal_movement = 0.5
 distance = 10
 acceleration = 40
+fov = 70
+start_fov = 30

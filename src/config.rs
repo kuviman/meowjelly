@@ -5,6 +5,8 @@ pub struct Camera {
     pub acceleration: f32,
     pub horizontal_movement: f32,
     pub distance: f32,
+    pub start_fov: f32,
+    pub fov: f32,
 }
 
 #[derive(Deserialize)]
@@ -75,7 +77,16 @@ pub struct Legs {
 }
 
 #[derive(Deserialize)]
+pub struct Tutorial {
+    pub scale: f32,
+    pub touch_pos: vec3<f32>,
+    pub keyboard_pos: vec3<f32>,
+}
+
+#[derive(Deserialize)]
 pub struct Config {
+    pub tutorial: Tutorial,
+    pub start_time: f32,
     pub death_distance: f32,
     pub legs: Legs,
     pub shake: Shake,

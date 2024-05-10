@@ -106,6 +106,7 @@ pub struct GameState {
     bounce: Option<Bounce>,
     bounce_particles: ParticleSpawner,
     shake_time: f32,
+    started: Option<f32>,
 }
 
 impl GameState {
@@ -117,7 +118,7 @@ impl GameState {
             framebuffer_size: vec2::splat(1.0),
             camera: Camera {
                 pos: vec3::ZERO,
-                fov: Angle::from_degrees(ctx.render.config.fov),
+                fov: Angle::from_degrees(ctx.config.camera.start_fov),
                 vel: vec3::ZERO,
                 far: ctx.render.config.fog_distance,
                 shake: CameraShake {
@@ -139,6 +140,7 @@ impl GameState {
             bounce: None,
             bounce_particles: ctx.particles.spawner(&ctx.particles.config.bounce),
             shake_time: 0.0,
+            started: None,
         }
     }
 
@@ -208,6 +210,21 @@ impl geng::State for GameState {
                 self.ctx.config.tube_radius,
             );
         }
+
+        for obstacle in self.obstacles.iter().rev() {
+            self.ctx.render.sprite(
+                framebuffer,
+                &self.camera,
+                &obstacle.texture,
+                mat4::translate(vec3(0.0, 0.0, obstacle.z)) * obstacle.transform,
+            );
+        }
+
+        self.ctx.render.color_overlay(
+            framebuffer,
+            Rgba::new(0.0, 0.0, 0.0, 1.0 - self.started.unwrap_or(0.0).min(1.0)),
+        );
+
         if let Some(player) = &self.player {
             // shadow
             let distance_to_tube =
@@ -319,21 +336,53 @@ impl geng::State for GameState {
             }
         }
 
-        for obstacle in self.obstacles.iter().rev() {
-            self.ctx.render.sprite(
-                framebuffer,
-                &self.camera,
-                &obstacle.texture,
-                mat4::translate(vec3(0.0, 0.0, obstacle.z)) * obstacle.transform,
-            );
-        }
-
         self.ctx.particles.draw(framebuffer, &self.camera);
+
+        // tutorial
+        {
+            let alpha = (1.0 - self.started.unwrap_or(0.0)).clamp(0.0, 1.0);
+            for (texture, pos) in [
+                (
+                    &self.ctx.assets.tutorial.touch,
+                    self.ctx.config.tutorial.touch_pos,
+                ),
+                (
+                    &self.ctx.assets.tutorial.keyboard,
+                    self.ctx.config.tutorial.keyboard_pos,
+                ),
+            ] {
+                // let mut pos = pos;
+                // if self.framebuffer_size.aspect() > 1.0 {
+                //     pos = pos.xy().rotate_90().extend(pos.z);
+                // }
+                self.ctx.render.sprite_ext(
+                    framebuffer,
+                    &self.camera,
+                    texture,
+                    mat4::translate(pos)
+                        * mat4::scale(
+                            texture.size().map(|x| x as f32).extend(1.0)
+                                * self.ctx.config.tutorial.scale,
+                        ),
+                    Rgba::new(1.0, 1.0, 1.0, alpha),
+                    false,
+                );
+            }
+        }
     }
     fn update(&mut self, delta_time: f64) {
         let delta_time = delta_time as f32;
 
         self.time += delta_time;
+        if let Some(time) = &mut self.started {
+            *time += delta_time / self.ctx.config.start_time;
+        }
+        {
+            let t = self.started.unwrap_or(0.0).clamp(0.0, 1.0);
+            self.camera.fov = Angle::from_degrees(
+                t * self.ctx.config.camera.fov + (1.0 - t) * self.ctx.config.camera.start_fov,
+            );
+        }
 
         self.shake_time -= delta_time;
         self.camera.shake.amount = self.ctx.config.shake.amount
@@ -378,14 +427,21 @@ impl geng::State for GameState {
                 control(&self.ctx.controls.player.right, 1.0, 0.0);
                 target_vel.clamp_len(..=1.0) * self.ctx.config.player.max_speed
             };
+            if self.started.is_none() && target_vel != vec2::ZERO {
+                self.started = Some(0.0);
+            }
+            let target_vel = target_vel * self.started.unwrap_or(0.0).min(1.0);
             assert!(target_vel.x.is_finite());
             player.vel += (target_vel - player.vel.xy())
                 .clamp_len(..=self.ctx.config.player.acceleration * delta_time)
                 .extend(0.0);
 
             // gravity
-            player.vel.z = (player.vel.z - self.ctx.config.player.fall_acceleration * delta_time)
-                .clamp_abs(self.ctx.config.player.fall_speed);
+            if self.started.is_some() {
+                player.vel.z = (player.vel.z
+                    - self.ctx.config.player.fall_acceleration * delta_time)
+                    .clamp_abs(self.ctx.config.player.fall_speed);
+            }
 
             // collision with the tube
             let tube_normal = -player.pos.xy().normalize_or_zero();

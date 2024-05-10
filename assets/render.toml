@@ -1,4 +1,3 @@
 cylinder_segments = 50
-fov = 70
 fog_color = "black"
 fog_distance = 200

@@ -17,6 +17,7 @@ pub struct Render {
 #[derive(geng::asset::Load)]
 struct Shaders {
     texture: ugli::Program,
+    color_overlay: ugli::Program,
 }
 
 #[derive(geng::asset::Load)]
@@ -29,7 +30,6 @@ pub struct Config {
     pub cylinder_segments: usize,
     pub fog_distance: f32,
     pub fog_color: Rgba<f32>,
-    pub fov: f32,
 }
 
 impl Render {
@@ -85,6 +85,23 @@ impl Render {
         matrix: mat4<f32>,
     ) {
         self.sprite_ext(framebuffer, camera, texture, matrix, Rgba::WHITE, true)
+    }
+
+    pub fn color_overlay(&self, framebuffer: &mut ugli::Framebuffer, color: Rgba<f32>) {
+        ugli::draw(
+            framebuffer,
+            &self.assets.shaders.color_overlay,
+            ugli::DrawMode::TriangleFan,
+            &self.quad,
+            ugli::uniforms! {
+                u_color: color,
+            },
+            ugli::DrawParameters {
+                blend_mode: Some(ugli::BlendMode::straight_alpha()),
+                write_depth: false,
+                ..default()
+            },
+        );
     }
 
     pub fn sprite_ext(
