@@ -108,6 +108,7 @@ pub struct Sfx {
 
 #[derive(Deserialize)]
 pub struct Score {
+    pub best_pos: vec3<f32>,
     pub pos: vec3<f32>,
     pub distance: f32,
     pub coin: f32,

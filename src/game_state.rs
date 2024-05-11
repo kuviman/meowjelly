@@ -148,6 +148,7 @@ impl DigitPlace {
 
 pub struct GameState {
     key_input: bool,
+    best_score: i32,
     framebuffer_size: vec2<f32>,
     death_rotation: Angle<f32>,
     ctx: Ctx,
@@ -178,6 +179,7 @@ impl GameState {
         effect.play();
 
         Self {
+            best_score: preferences::load("best_score").unwrap_or(0),
             score: 0.0,
             score_digits: Vec::new(),
             ctx: ctx.clone(),
@@ -512,29 +514,63 @@ impl geng::State for GameState {
         }
 
         // score
+        struct OrthoCam {
+            fov: f32,
+        }
+        let camera = OrthoCam {
+            fov: self.ctx.config.score.fov,
+        };
+        impl AbstractCamera3d for OrthoCam {
+            fn view_matrix(&self) -> mat4<f32> {
+                mat4::identity()
+            }
+            fn projection_matrix(&self, framebuffer_size: vec2<f32>) -> mat4<f32> {
+                mat4::scale(vec3(1.0 / framebuffer_size.aspect(), 1.0, 1.0) / self.fov * 2.0)
+            }
+        }
         for (i, digit) in self.score_digits.iter().rev().enumerate() {
             let x = i as f32 * self.ctx.config.digit_size
                 - (self.score_digits.len() as f32 - 1.0) / 2.0;
-            struct OrthoCam {
-                fov: f32,
-            }
-            let camera = OrthoCam {
-                fov: self.ctx.config.score.fov,
-            };
-            impl AbstractCamera3d for OrthoCam {
-                fn view_matrix(&self) -> mat4<f32> {
-                    mat4::identity()
-                }
-                fn projection_matrix(&self, framebuffer_size: vec2<f32>) -> mat4<f32> {
-                    mat4::scale(vec3(1.0 / framebuffer_size.aspect(), 1.0, 1.0) / self.fov * 2.0)
-                }
-            }
             self.ctx.render.digit(
                 framebuffer,
                 &camera,
                 digit.current_value,
                 Rgba::WHITE,
                 mat4::translate(vec3(x, 0.0, 0.0) + self.ctx.config.score.pos),
+            );
+        }
+        if self.score as i32 >= self.best_score && !self.score_digits.is_empty() {
+            self.ctx.render.sprite(
+                framebuffer,
+                &camera,
+                &self.ctx.assets.top1,
+                mat4::translate(
+                    vec3(-(self.score_digits.len() as f32 + 3.0) / 2.0, 0.0, 0.0)
+                        + self.ctx.config.score.pos,
+                ),
+            );
+        } else if let Some(finished) = self.finished {
+            let alpha = finished.min(1.0);
+            let best_score = self.best_score.to_string();
+            for (i, digit) in best_score.chars().enumerate() {
+                let x =
+                    i as f32 * self.ctx.config.digit_size - (best_score.len() as f32 - 2.0) / 2.0;
+                self.ctx.render.digit(
+                    framebuffer,
+                    &camera,
+                    digit.to_digit(10).unwrap() as f32,
+                    Rgba::new(1.0, 1.0, 1.0, alpha),
+                    mat4::translate(vec3(x, 0.0, 0.0) + self.ctx.config.score.best_pos),
+                );
+            }
+            self.ctx.render.sprite(
+                framebuffer,
+                &camera,
+                &self.ctx.assets.top1,
+                mat4::translate(
+                    vec3(-(best_score.len() as f32 + 2.5) / 2.0, 0.0, 0.0)
+                        + self.ctx.config.score.best_pos,
+                ),
             );
         }
     }
@@ -544,7 +580,7 @@ impl geng::State for GameState {
         if self.started.is_some() {
             let mut score = self.score as i32;
             let mut i = 0;
-            while score != 0 {
+            while score != 0 || self.score_digits.is_empty() {
                 if i >= self.score_digits.len() {
                     self.score_digits.push(DigitPlace::new());
                 }
@@ -563,6 +599,11 @@ impl geng::State for GameState {
         }
         if self.finished.is_none() && self.player.is_none() {
             self.finished = Some(0.0);
+            let score = self.score as i32;
+            if score > self.best_score {
+                self.best_score = score;
+                preferences::save("best_score", &self.best_score);
+            }
             self.ctx.assets.sfx.death.play();
             self.music = self.ctx.start_music(&self.ctx.assets.music.mallet);
         }

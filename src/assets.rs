@@ -81,4 +81,5 @@ pub struct Assets {
     pub tutorial: Tutorial,
     pub music: Music,
     pub sfx: Sfx,
+    pub top1: ugli::Texture,
 }
