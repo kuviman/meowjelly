@@ -4,17 +4,22 @@ mod assets;
 mod config;
 mod controls;
 mod ctx;
+mod easings;
 mod game_state;
+mod loading;
 mod particles;
 mod render;
-mod easings;
 
 use easings::*;
 
 use ctx::Ctx;
 
 async fn run(geng: Geng) {
-    let ctx = Ctx::load(&geng).await;
+    let ctx =
+        match future::select(Ctx::load(&geng).boxed_local(), loading::run(&geng).boxed_local()).await {
+            future::Either::Left(ctx) => ctx.0,
+            future::Either::Right(_) => return,
+        };
     let ctx = &ctx;
     geng.run_state(game_state::GameState::new(ctx)).await;
 }
