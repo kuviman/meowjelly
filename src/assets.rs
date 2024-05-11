@@ -34,6 +34,7 @@ pub struct Sfx {
     #[load(options(looped = "true"))]
     pub swim: geng::Sound,
     pub death: geng::Sound,
+    pub obstacle_pass: geng::Sound,
 }
 
 #[derive(geng::asset::Load)]

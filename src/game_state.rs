@@ -638,6 +638,18 @@ impl geng::State for GameState {
                 }
             }
 
+            for obstacle in &self.obstacles {
+                if prev_pos.z >= obstacle.z && player.pos.z < obstacle.z {
+                    let mut effect = self.ctx.assets.sfx.obstacle_pass.effect();
+                    effect.set_volume(self.ctx.config.sfx.obstacle_pass_volume);
+                    effect.set_speed(
+                        1.0 + thread_rng().gen_range(-1.0..=1.0)
+                            * self.ctx.config.sfx.obstacle_pass_speed_range,
+                    );
+                    effect.play();
+                }
+            }
+
             player.leg_rot += Angle::from_degrees(
                 self.ctx.config.legs.rotate_speed * player.vel.xy().len()
                     / self.ctx.config.player.max_speed
