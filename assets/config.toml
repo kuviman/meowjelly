@@ -6,6 +6,10 @@ bounce_particles = 10
 bounce_particle_speed = 10
 death_distance = 2
 
+[sfx]
+wind_move_volume = 0.2
+wind_fall_volume = 0.2
+
 [music]
 fade_time = 1
 

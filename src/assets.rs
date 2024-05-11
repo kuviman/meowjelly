@@ -28,6 +28,12 @@ pub struct Music {
 }
 
 #[derive(geng::asset::Load)]
+pub struct Sfx {
+    #[load(options(looped = "true"))]
+    pub wind: geng::Sound,
+}
+
+#[derive(geng::asset::Load)]
 pub struct Assets {
     #[load(listed_in = "_list.ron")]
     #[load(options(wrap_mode = "ugli::WrapMode::Repeat"))]
@@ -39,4 +45,5 @@ pub struct Assets {
     #[load(list = "0..=9", path = "digits/*.png")]
     pub digits: Vec<ugli::Texture>,
     pub music: Music,
+    pub sfx: Sfx,
 }
