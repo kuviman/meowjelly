@@ -67,8 +67,7 @@ struct Bounce {
 struct Obstacle {
     z: f32,
     transform: mat4<f32>,
-    texture: Rc<ugli::Texture>,
-    data: Vec<Vec<Rgba<u8>>>,
+    data: Rc<assets::Obstacle>,
 }
 
 impl Obstacle {
@@ -83,9 +82,9 @@ impl Obstacle {
         if x < 0.0 || y < 0.0 || x > 1.0 || y > 1.0 {
             return None;
         }
-        let x = (x * self.data.len() as f32).floor() as usize;
-        let y = (y * self.data[0].len() as f32).floor() as usize;
-        let color = self.data.get(x)?.get(y)?;
+        let x = (x * self.data.data.len() as f32).floor() as usize;
+        let y = (y * self.data.data[0].len() as f32).floor() as usize;
+        let color = self.data.data.get(x)?.get(y)?;
         if color.a == 0 {
             return None;
         }
@@ -287,7 +286,7 @@ impl geng::State for GameState {
             self.ctx.render.sprite(
                 framebuffer,
                 &self.camera,
-                &obstacle.texture,
+                &obstacle.data.texture,
                 mat4::translate(vec3(0.0, 0.0, obstacle.z)) * obstacle.transform,
             );
         }
@@ -803,7 +802,7 @@ impl geng::State for GameState {
                 .choose(&mut thread_rng())
                 .unwrap()
                 .clone();
-            let mut aspect = texture.size().map(|x| x as f32).aspect();
+            let mut aspect = texture.texture.size().map(|x| x as f32).aspect();
             let mut transform = mat4::identity();
             if aspect >= 1.0 {
                 // transform *= mat4::rotate_z(Angle::from_degrees(90.0));
@@ -816,20 +815,10 @@ impl geng::State for GameState {
             )) * transform;
             transform = mat4::rotate_z(thread_rng().gen()) * transform;
 
-            let fb = ugli::FramebufferRead::new_color(
-                self.ctx.geng.ugli(),
-                ugli::ColorAttachmentRead::Texture(&texture),
-            );
-            let data = fb.read_color();
-            let data = (0..texture.size().x)
-                .map(|x| (0..texture.size().y).map(|y| data.get(x, y)).collect())
-                .collect();
-
             self.obstacles.push(Obstacle {
                 z,
                 transform,
-                texture,
-                data,
+                data: texture,
             });
         }
         self.obstacles
