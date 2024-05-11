@@ -21,7 +21,7 @@ pub async fn run(geng: &Geng) {
                             vec2(1.0, 0.0)
                                 .rotate(Angle::from_degrees(360.0 * i as f32 / SPINNERS as f32)),
                         )
-                        .extend_uniform(0.1),
+                        .extend_uniform(0.2),
                         Rgba::WHITE,
                     );
                 }
