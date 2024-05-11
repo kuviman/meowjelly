@@ -155,6 +155,10 @@ pub struct GameState {
 
 impl GameState {
     pub fn new(ctx: &Ctx) -> Self {
+        let mut effect = ctx.assets.sfx.start.effect();
+        effect.set_volume(ctx.config.sfx.start_volume);
+        effect.play();
+
         Self {
             ctx: ctx.clone(),
             finished: None,

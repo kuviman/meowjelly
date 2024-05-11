@@ -36,6 +36,7 @@ pub struct Sfx {
     pub death: geng::Sound,
     pub obstacle_pass: geng::Sound,
     pub hit: geng::Sound,
+    pub start: geng::Sound,
 }
 
 #[derive(geng::asset::Load)]

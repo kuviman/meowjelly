@@ -14,6 +14,7 @@ obstacle_pass_volume = 0.2
 obstacle_pass_speed_range = 0.5
 hit_volume = 0.2
 hit_speed_range = 0.5
+start_volume = 0.4
 
 [music]
 fade_time = 1
@@ -50,7 +51,7 @@ alpha = 0.6
 [player]
 max_speed = 30
 acceleration = 300
-fall_speed = 100
+fall_speed = 70
 fall_acceleration = 10
 fall_slow_acceleration = 1
 radius = 1
