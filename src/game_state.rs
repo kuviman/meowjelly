@@ -170,6 +170,7 @@ pub struct GameState {
     swim: SoundEffect,
     score: f32,
     score_digits: Vec<DigitPlace>,
+    coins: Vec<vec3<f32>>,
 }
 
 impl GameState {
@@ -179,6 +180,7 @@ impl GameState {
         effect.play();
 
         Self {
+            coins: Vec::new(),
             best_score: preferences::load("best_score").unwrap_or(0),
             score: 0.0,
             score_digits: Vec::new(),
@@ -311,6 +313,20 @@ impl geng::State for GameState {
                 &self.camera,
                 &obstacle.data.texture,
                 mat4::translate(vec3(0.0, 0.0, obstacle.z)) * obstacle.transform,
+            );
+        }
+
+        for &coin in self.coins.iter().rev() {
+            self.ctx.render.sprite(
+                framebuffer,
+                &self.camera,
+                &self.ctx.assets.coin,
+                mat4::translate(coin)
+                    * mat4::scale_uniform(self.ctx.config.coin.radius)
+                    * mat4::rotate_z(Angle::from_degrees(
+                        self.time * self.ctx.config.coin.rotation_speed,
+                    ))
+                    * mat4::rotate_x(Angle::from_degrees(self.ctx.config.coin.skew)),
             );
         }
 
@@ -638,6 +654,19 @@ impl geng::State for GameState {
         }
 
         if let Some(player) = &mut self.player {
+            if let Some(index) = self.coins.iter().position(|&coin| {
+                (coin - player.pos).len() < player.radius + self.ctx.config.coin.radius
+            }) {
+                self.coins.remove(index);
+                self.score += self.ctx.config.score.coin;
+                let mut effect = self.ctx.assets.sfx.coin.effect();
+                effect.set_volume(self.ctx.config.sfx.coin_volume);
+                effect.set_speed(
+                    1.0 + thread_rng().gen_range(-1.0..=1.0) * self.ctx.config.sfx.coin_speed_range,
+                );
+                effect.play();
+            }
+
             self.wind.set_volume(
                 player.vel.xy().len() / self.ctx.config.player.max_speed
                     * self.ctx.config.sfx.wind_move_volume
@@ -899,9 +928,10 @@ impl geng::State for GameState {
         }
         self.walls
             .retain(|wall| wall.range.end < self.camera.pos.z + 10.0);
+        self.coins.retain(|&coin| coin.z < self.camera.pos.z);
         while self.obstacles.last().map_or(true, |last| last.z > far) {
-            let z = self.obstacles.last().map_or(0.0, |last| last.z)
-                - thread_rng().gen_range(self.ctx.config.obstacles.distance.range());
+            let last_z = self.obstacles.last().map_or(0.0, |last| last.z);
+            let z = last_z - thread_rng().gen_range(self.ctx.config.obstacles.distance.range());
             let texture = self
                 .ctx
                 .assets
@@ -921,6 +951,12 @@ impl geng::State for GameState {
                 aspect.acos() * if thread_rng().gen() { -1.0 } else { 1.0 },
             )) * transform;
             transform = mat4::rotate_z(thread_rng().gen()) * transform;
+
+            self.coins.push(
+                vec2(self.ctx.config.tube_radius / 2.0, 0.0)
+                    .rotate(thread_rng().gen())
+                    .extend((z + last_z) / 2.0),
+            );
 
             self.obstacles.push(Obstacle {
                 z,

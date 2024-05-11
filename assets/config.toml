@@ -7,12 +7,17 @@ bounce_particles = 10
 bounce_particle_speed = 10
 death_distance = 2
 
+[coin]
+radius = 2
+rotation_speed = 100
+skew = 10
+
 [score]
 best_pos = [1, 6, -1]
 pos = [0, 9, -1]
 fov = 22
 distance = 0.05
-coin = 100
+coin = 25
 digit_update_speed = 10
 
 [sfx]
@@ -23,6 +28,8 @@ obstacle_pass_volume = 0.2
 obstacle_pass_speed_range = 0.5
 hit_volume = 0.2
 hit_speed_range = 0.5
+coin_volume = 0.5
+coin_speed_range = 0.2
 start_volume = 0.4
 
 [music]

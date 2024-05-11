@@ -37,6 +37,7 @@ pub struct Sfx {
     pub obstacle_pass: geng::Sound,
     pub hit: geng::Sound,
     pub start: geng::Sound,
+    pub coin: geng::Sound,
 }
 
 pub struct Obstacle {
@@ -82,4 +83,5 @@ pub struct Assets {
     pub music: Music,
     pub sfx: Sfx,
     pub top1: ugli::Texture,
+    pub coin: ugli::Texture,
 }

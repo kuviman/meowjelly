@@ -103,6 +103,8 @@ pub struct Sfx {
     pub obstacle_pass_speed_range: f32,
     pub hit_volume: f32,
     pub hit_speed_range: f32,
+    pub coin_volume: f32,
+    pub coin_speed_range: f32,
     pub start_volume: f32,
 }
 
@@ -117,7 +119,15 @@ pub struct Score {
 }
 
 #[derive(Deserialize)]
+pub struct Coin {
+    pub radius: f32,
+    pub rotation_speed: f32,
+    pub skew: f32,
+}
+
+#[derive(Deserialize)]
 pub struct Config {
+    pub coin: Coin,
     pub digit_size: f32,
     pub score: Score,
     pub sfx: Sfx,
