@@ -96,6 +96,7 @@ pub struct Music {
 
 #[derive(Deserialize)]
 pub struct Sfx {
+    pub swim_volume: f32,
     pub wind_move_volume: f32,
     pub wind_fall_volume: f32,
 }

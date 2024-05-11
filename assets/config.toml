@@ -7,8 +7,9 @@ bounce_particle_speed = 10
 death_distance = 2
 
 [sfx]
-wind_move_volume = 0.2
-wind_fall_volume = 0.2
+swim_volume = 1
+wind_move_volume = 0.1
+wind_fall_volume = 0.1
 
 [music]
 fade_time = 1

@@ -150,6 +150,7 @@ pub struct GameState {
     finished: Option<f32>,
     music: SoundEffect,
     wind: SoundEffect,
+    swim: SoundEffect,
 }
 
 impl GameState {
@@ -162,6 +163,7 @@ impl GameState {
             framebuffer_size: vec2::splat(1.0),
             death_location: None,
             wind: ctx.sound_effect(&ctx.assets.sfx.wind, 0.0),
+            swim: ctx.sound_effect(&ctx.assets.sfx.swim, 0.0),
             music: ctx.start_music(&ctx.assets.music.piano),
             camera: Camera {
                 pos: vec3::ZERO,
@@ -534,6 +536,10 @@ impl geng::State for GameState {
                     + player.vel.z.abs() / self.ctx.config.player.fall_speed
                         * self.ctx.config.sfx.wind_fall_volume,
             );
+            self.swim.set_volume(
+                player.vel.xy().len() / self.ctx.config.player.max_speed
+                    * self.ctx.config.sfx.swim_volume,
+            );
 
             player.move_particles.pos = player.pos;
             player.move_particles.vel = player.vel * self.ctx.config.player.particle_speed_ratio;
@@ -723,6 +729,7 @@ impl geng::State for GameState {
             }
         } else {
             self.wind.set_volume(0.0);
+            self.swim.set_volume(0.0);
             self.camera.pos += self.camera.vel * delta_time;
             self.camera.pos = self
                 .camera

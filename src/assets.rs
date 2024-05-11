@@ -31,6 +31,8 @@ pub struct Music {
 pub struct Sfx {
     #[load(options(looped = "true"))]
     pub wind: geng::Sound,
+    #[load(options(looped = "true"))]
+    pub swim: geng::Sound,
     pub death: geng::Sound,
 }
 
