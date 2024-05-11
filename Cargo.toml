@@ -1,6 +1,6 @@
 [package]
-name = "sgj2024"
-version = "0.1.0"
+name = "meowjelly"
+version = "1.0.0"
 edition = "2021"
 
 [profile.dev.package."*"]
