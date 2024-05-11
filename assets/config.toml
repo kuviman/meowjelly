@@ -6,6 +6,9 @@ bounce_particles = 10
 bounce_particle_speed = 10
 death_distance = 2
 
+[music]
+fade_time = 1
+
 [tutorial]
 scale = 0.001
 touch_pos = [0, -1.5, 0]

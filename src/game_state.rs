@@ -93,6 +93,30 @@ impl Obstacle {
     }
 }
 
+struct SoundEffect {
+    inner: geng::SoundEffect,
+    fade_time: time::Duration,
+}
+
+impl Drop for SoundEffect {
+    fn drop(&mut self) {
+        self.inner.fade_out(self.fade_time);
+    }
+}
+
+impl Ctx {
+    fn start_music(&self, sound: &geng::Sound) -> SoundEffect {
+        let mut effect = sound.effect();
+        let fade_time = time::Duration::from_secs_f64(self.config.music.fade_time);
+        effect.fade_in(fade_time);
+        effect.play();
+        SoundEffect {
+            inner: effect,
+            fade_time,
+        }
+    }
+}
+
 pub struct GameState {
     key_input: bool,
     framebuffer_size: vec2<f32>,
@@ -111,6 +135,7 @@ pub struct GameState {
     shake_time: f32,
     started: Option<f32>,
     finished: Option<f32>,
+    music: SoundEffect,
 }
 
 impl GameState {
@@ -122,6 +147,7 @@ impl GameState {
             obstacles: Vec::new(),
             framebuffer_size: vec2::splat(1.0),
             death_location: None,
+            music: ctx.start_music(&ctx.assets.music.piano),
             camera: Camera {
                 pos: vec3::ZERO,
                 fov: Angle::from_degrees(ctx.config.camera.start_fov),
@@ -453,6 +479,7 @@ impl geng::State for GameState {
         }
         if self.finished.is_none() && self.player.is_none() {
             self.finished = Some(0.0);
+            self.music = self.ctx.start_music(&self.ctx.assets.music.mallet);
         }
         if let Some(time) = &mut self.finished {
             *time += delta_time / self.ctx.config.finish_time;
@@ -515,6 +542,7 @@ impl geng::State for GameState {
             };
             if self.started.is_none() && (target_vel != vec2::ZERO || self.touch_control.is_some())
             {
+                self.music = self.ctx.start_music(&self.ctx.assets.music.guitar);
                 self.started = Some(0.0);
             }
             let target_vel = target_vel * self.started.unwrap_or(0.0).min(1.0);

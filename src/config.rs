@@ -90,7 +90,13 @@ pub struct Tutorial {
 }
 
 #[derive(Deserialize)]
+pub struct Music {
+    pub fade_time: f64,
+}
+
+#[derive(Deserialize)]
 pub struct Config {
+    pub music: Music,
     pub tutorial: Tutorial,
     pub start_time: f32,
     pub finish_time: f32,

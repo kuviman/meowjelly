@@ -18,6 +18,16 @@ pub struct Tutorial {
 }
 
 #[derive(geng::asset::Load)]
+pub struct Music {
+    #[load(ext = "mp3", options(looped = "true"))]
+    pub mallet: geng::Sound,
+    #[load(ext = "mp3", options(looped = "true"))]
+    pub piano: geng::Sound,
+    #[load(ext = "mp3", options(looped = "true"))]
+    pub guitar: geng::Sound,
+}
+
+#[derive(geng::asset::Load)]
 pub struct Assets {
     #[load(listed_in = "_list.ron")]
     #[load(options(wrap_mode = "ugli::WrapMode::Repeat"))]
@@ -28,4 +38,5 @@ pub struct Assets {
     pub tutorial: Tutorial,
     #[load(list = "0..=9", path = "digits/*.png")]
     pub digits: Vec<ugli::Texture>,
+    pub music: Music,
 }
