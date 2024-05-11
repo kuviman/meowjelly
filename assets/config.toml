@@ -12,6 +12,8 @@ wind_move_volume = 0.1
 wind_fall_volume = 0.1
 obstacle_pass_volume = 0.2
 obstacle_pass_speed_range = 0.5
+hit_volume = 0.2
+hit_speed_range = 0.5
 
 [music]
 fade_time = 1

@@ -101,6 +101,8 @@ pub struct Sfx {
     pub wind_fall_volume: f32,
     pub obstacle_pass_volume: f32,
     pub obstacle_pass_speed_range: f32,
+    pub hit_volume: f32,
+    pub hit_speed_range: f32,
 }
 
 #[derive(Deserialize)]

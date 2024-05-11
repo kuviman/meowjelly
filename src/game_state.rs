@@ -618,6 +618,13 @@ impl geng::State for GameState {
                     for _ in 0..self.ctx.config.bounce_particles {
                         self.bounce_particles.spawn();
                     }
+                    let mut effect = self.ctx.assets.sfx.hit.effect();
+                    effect.set_volume(self.ctx.config.sfx.hit_volume);
+                    effect.set_speed(
+                        1.0 + thread_rng().gen_range(-1.0..=1.0)
+                            * self.ctx.config.sfx.hit_speed_range,
+                    );
+                    effect.play();
                     self.shake_time = self.ctx.config.shake.time;
                 }
             }
@@ -734,6 +741,13 @@ impl geng::State for GameState {
                         for _ in 0..self.ctx.config.bounce_particles {
                             self.bounce_particles.spawn();
                         }
+                        let mut effect = self.ctx.assets.sfx.hit.effect();
+                        effect.set_volume(self.ctx.config.sfx.hit_volume);
+                        effect.set_speed(
+                            1.0 + thread_rng().gen_range(-1.0..=1.0)
+                                * self.ctx.config.sfx.hit_speed_range,
+                        );
+                        effect.play();
                         self.shake_time = self.ctx.config.shake.time;
                         break;
                     }
