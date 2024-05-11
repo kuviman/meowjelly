@@ -28,7 +28,7 @@ obstacle_pass_volume = 0.2
 obstacle_pass_speed_range = 0.5
 hit_volume = 0.2
 hit_speed_range = 0.5
-coin_volume = 0.5
+coin_volume = 0.1
 coin_speed_range = 0.2
 start_volume = 0.4
 
