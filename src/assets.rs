@@ -79,8 +79,6 @@ pub struct Assets {
     pub obstacles: Vec<Rc<Obstacle>>,
     pub player: Player,
     pub tutorial: Tutorial,
-    #[load(list = "0..=9", path = "digits/*.png")]
-    pub digits: Vec<ugli::Texture>,
     pub music: Music,
     pub sfx: Sfx,
 }

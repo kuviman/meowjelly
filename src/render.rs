@@ -24,6 +24,8 @@ struct Shaders {
 #[derive(geng::asset::Load)]
 struct Assets {
     shaders: Shaders,
+    #[load(list = "0..=9", path = "digits/*.png")]
+    pub digits: Vec<ugli::Texture>,
 }
 
 #[derive(Deserialize)]
@@ -77,6 +79,25 @@ impl Render {
             config,
             white_texture: ugli::Texture::new_with(geng.ugli(), vec2::splat(1), |_| Rgba::WHITE),
         }
+    }
+
+    pub fn digit(
+        &self,
+        framebuffer: &mut ugli::Framebuffer,
+        camera: &dyn AbstractCamera3d,
+        value: f32,
+        color: Rgba<f32>,
+        matrix: mat4<f32>,
+    ) {
+        let digit = (value.round() as i32).rem_euclid(10) as usize;
+        self.sprite_ext(
+            framebuffer,
+            camera,
+            &self.assets.digits[digit],
+            matrix * mat4::rotate_x(Angle::from_degrees(value.fract() * 360.0)),
+            color,
+            false,
+        )
     }
 
     pub fn sprite(

@@ -129,6 +129,23 @@ impl Ctx {
     }
 }
 
+struct DigitPlace {
+    current_value: f32,
+    target_value: i32,
+}
+
+impl DigitPlace {
+    pub fn new() -> Self {
+        Self {
+            current_value: -0.5,
+            target_value: 0,
+        }
+    }
+    pub fn update(&mut self, delta_time: f32) {
+        self.current_value += (self.target_value as f32 - self.current_value) * delta_time.min(1.0);
+    }
+}
+
 pub struct GameState {
     key_input: bool,
     framebuffer_size: vec2<f32>,
@@ -150,6 +167,8 @@ pub struct GameState {
     music: SoundEffect,
     wind: SoundEffect,
     swim: SoundEffect,
+    score: f32,
+    score_digits: Vec<DigitPlace>,
 }
 
 impl GameState {
@@ -159,6 +178,8 @@ impl GameState {
         effect.play();
 
         Self {
+            score: 0.0,
+            score_digits: Vec::new(),
             ctx: ctx.clone(),
             finished: None,
             time: 0.0,
@@ -489,9 +510,52 @@ impl geng::State for GameState {
                 );
             }
         }
+
+        // score
+        for (i, digit) in self.score_digits.iter().rev().enumerate() {
+            let x = i as f32 * self.ctx.config.digit_size
+                - (self.score_digits.len() as f32 - 1.0) / 2.0;
+            struct OrthoCam {
+                fov: f32,
+            }
+            let camera = OrthoCam {
+                fov: self.ctx.config.score.fov,
+            };
+            impl AbstractCamera3d for OrthoCam {
+                fn view_matrix(&self) -> mat4<f32> {
+                    mat4::identity()
+                }
+                fn projection_matrix(&self, framebuffer_size: vec2<f32>) -> mat4<f32> {
+                    mat4::scale(vec3(1.0 / framebuffer_size.aspect(), 1.0, 1.0) / self.fov * 2.0)
+                }
+            }
+            self.ctx.render.digit(
+                framebuffer,
+                &camera,
+                digit.current_value,
+                Rgba::WHITE,
+                mat4::translate(vec3(x, 0.0, 0.0) + self.ctx.config.score.pos),
+            );
+        }
     }
     fn update(&mut self, delta_time: f64) {
         let delta_time = delta_time as f32;
+
+        if self.started.is_some() {
+            let mut score = self.score as i32;
+            let mut i = 0;
+            while score != 0 {
+                if i >= self.score_digits.len() {
+                    self.score_digits.push(DigitPlace::new());
+                }
+                self.score_digits[i].target_value = score;
+                score /= 10;
+                i += 1;
+            }
+        }
+        for digit in &mut self.score_digits {
+            digit.update(delta_time * self.ctx.config.score.digit_update_speed);
+        }
 
         self.time += delta_time;
         if let Some(time) = &mut self.started {
@@ -631,6 +695,8 @@ impl geng::State for GameState {
                     self.shake_time = self.ctx.config.shake.time;
                 }
             }
+
+            self.score += player.vel.z.abs() * delta_time * self.ctx.config.score.distance;
 
             let prev_pos = player.pos;
             player.pos += player.vel * delta_time;
