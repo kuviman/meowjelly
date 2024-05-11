@@ -3,6 +3,9 @@ name = "sgj2024"
 version = "0.1.0"
 edition = "2021"
 
+[profile.dev.package."*"]
+opt-level = 2
+
 [dependencies]
 geng.git = "https://github.com/kuviman/geng"
 serde = "1"
