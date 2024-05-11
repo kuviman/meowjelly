@@ -494,6 +494,7 @@ impl geng::State for GameState {
         }
         if self.finished.is_none() && self.player.is_none() {
             self.finished = Some(0.0);
+            self.ctx.assets.sfx.death.play();
             self.music = self.ctx.start_music(&self.ctx.assets.music.mallet);
         }
         if let Some(time) = &mut self.finished {

@@ -31,6 +31,7 @@ pub struct Music {
 pub struct Sfx {
     #[load(options(looped = "true"))]
     pub wind: geng::Sound,
+    pub death: geng::Sound,
 }
 
 #[derive(geng::asset::Load)]
