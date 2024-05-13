@@ -45,7 +45,7 @@ touch_restart_pos = [2, -3.5, 0]
 final_scale = 0.003
 
 [obstacles]
-distance = { min = 50, max = 150 }
+distance = { min = 100, max = 150 }
 
 [legs]
 length = 0.7
@@ -65,7 +65,7 @@ scale = 4
 alpha = 0.6
 
 [player]
-max_speed = 30
+max_speed = 20
 acceleration = 300
 fall_speed = 70
 fall_acceleration = 10
