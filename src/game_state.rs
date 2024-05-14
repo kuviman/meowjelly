@@ -229,7 +229,7 @@ impl GameState {
 
     fn key_press(&mut self, key: geng::Key) {
         self.key_input = true;
-        if self.ctx.controls.quit.contains(&key) {
+        if self.ctx.controls.quit.contains(&key) && !cfg!(target_arch = "wasm32") {
             self.transition = Some(geng::state::Transition::Pop);
         }
         if self.ctx.controls.restart.contains(&key) {
