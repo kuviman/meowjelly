@@ -12,6 +12,6 @@
     in
     {
       src = ./.;
-      extraBuildInputs = [ pkgs-stable.butler ];
+      extraBuildInputs = [ pkgs-stable.butler pkgs.caddy ];
     });
 }

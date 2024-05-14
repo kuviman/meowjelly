@@ -1,5 +1,9 @@
-hello:
-  echo hi
+bash:
+  echo "just > bash"
+
+gh-pages:
+  cargo geng build --platform web --release --out-dir gh-pages/web
+  caddy file-server --listen 127.0.0.1:8080 --browse --root gh-pages
 
 deploy:
   cargo geng build --platform web --release
