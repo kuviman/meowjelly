@@ -1,7 +1,4 @@
 /.direnv/
 /target/
-
-
-# Added by cargo
-
-/target
+# use git worktree add gh-pages
+/gh-pages/
