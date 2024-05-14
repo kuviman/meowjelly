@@ -1,0 +1,8 @@
+restart = ["R"]
+quit = ["Escape"]
+
+[player]
+up = ["W", "ArrowUp", "K"]
+left = ["A", "ArrowLeft", "H"]
+down = ["S", "ArrowDown", "J"]
+right = ["D", "ArrowRight", "L"]

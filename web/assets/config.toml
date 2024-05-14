@@ -1,0 +1,95 @@
+digit_size = 1.5
+start_time = 0.5
+finish_time = 1
+tube_radius = 10
+wall_section = 10
+bounce_particles = 10
+bounce_particle_speed = 10
+death_distance = 2
+
+[coin]
+radius = 2
+rotation_speed = 100
+skew = 10
+
+[score]
+best_pos = [0, 6, -1]
+pos = [0, 9, -1]
+fov = 22
+distance = 0.05
+coin = 25
+digit_update_speed = 10
+
+[sfx]
+swim_volume = 1
+wind_move_volume = 0.1
+wind_fall_volume = 0.1
+obstacle_pass_volume = 0.2
+obstacle_pass_speed_range = 0.5
+hit_volume = 0.2
+hit_speed_range = 0.5
+coin_volume = 0.1
+coin_speed_range = 0.2
+start_volume = 0.4
+
+[music]
+fade_time = 1
+
+[tutorial]
+scale = 0.001
+touch_pos = [0, -1.5, 0]
+wasd_pos = [-1, 1.5, 0]
+arrows_pos = [1, 1.5, 0]
+r_pos = [-2, -3.5, 0]
+touch_restart_pos = [2, -3.5, 0]
+final_scale = 0.003
+
+[obstacles]
+distance = { min = 100, max = 150 }
+
+[legs]
+length = 0.7
+wiggle = 0.04
+freq = 2
+z = 0.3
+rotate_speed = 360
+
+[shake]
+time = 0.3
+amount = 2
+freq = 60
+
+[shadow]
+distance = 9.5
+scale = 4
+alpha = 0.6
+
+[player]
+max_speed = 20
+acceleration = 300
+fall_speed = 70
+fall_acceleration = 10
+fall_slow_acceleration = 1
+radius = 1
+bounce_speed = 50
+bounce_time = 2
+rotate_angle = 45
+particle_speed_ratio = 0.0
+death_radius = 2
+
+[passive_rotation]
+speed = 0
+amplitude = 10
+frequency = 0.5
+
+[touch_control]
+max_speed = 60
+small_radius = 3
+big_radius = 10
+
+[camera]
+horizontal_movement = 0.75
+distance = 10
+acceleration = 10000
+fov = 70
+start_fov = 30

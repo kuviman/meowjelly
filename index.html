@@ -1,0 +1,61 @@
+<html>
+
+<head>
+  <title>Meowjelly</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    iframe {
+      width: 100dvw;
+      height: 100dvh;
+      position: absolute;
+      left: 0;
+      top: 0;
+      border: none;
+      z-index: -10;
+    }
+
+    .button-aligner {
+      display: flex;
+      width: 100dvw;
+      height: 100dvh;
+      justify-content: center;
+      align-items: center;
+
+      background-color: black;
+    }
+
+    #playbutton {
+      cursor: pointer;
+      border-radius: 2vh;
+      font-weight: bold;
+      font-size: 2vh;
+      padding: 1vh;
+      font-family: sans-serif;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <iframe id="playframe" class="hidden"></iframe>
+  <div class="button-aligner">
+    <button id="playbutton" onClick="play()">Play the game</button>
+  </div>
+  <script>
+    function play() {
+      document.querySelector(".button-aligner").remove();
+      const playframe = document.getElementById("playframe");
+      playframe.setAttribute("src", "web");
+      playframe.classList.remove("hidden");
+    }
+  </script>
+</body>
+
+</html>
