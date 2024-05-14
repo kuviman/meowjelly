@@ -1,3 +1,9 @@
+[workspace]
+members = ["android"]
+
+[workspace.dependencies]
+batbox-android = { git = "https://github.com/geng-engine/batbox" }
+
 [package]
 name = "meowjelly"
 version = "1.0.0"
@@ -7,9 +13,10 @@ edition = "2021"
 opt-level = 2
 
 [dependencies]
-geng.git = "https://github.com/kuviman/geng"
+geng = { git = "https://github.com/geng-engine/geng" }
 serde = "1"
 
 [patch.crates-io]
+batbox-android = { git = "https://github.com/geng-engine/batbox" }
 # https://github.com/smol-rs/async-broadcast/pull/47
-async-broadcast = {git = "https://github.com/kuviman/async-broadcast", branch = "fix-wasm"}
+async-broadcast = { git = "https://github.com/kuviman/async-broadcast", branch = "fix-wasm" }
