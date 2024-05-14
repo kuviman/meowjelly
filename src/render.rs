@@ -1,9 +1,12 @@
+use geng_thick_sprite::ThickSprite;
+
 use super::*;
 
 #[derive(ugli::Vertex)]
 pub struct Vertex {
     pub a_pos: vec3<f32>,
     pub a_uv: vec2<f32>,
+    pub a_normal: vec3<f32>,
 }
 
 pub struct Render {
@@ -56,6 +59,7 @@ impl Render {
                     let at_z = |z: f32| Vertex {
                         a_pos: pos.extend(z),
                         a_uv: vec2(x, z),
+                        a_normal: vec3::UNIT_Z, // TODO maybe?
                     };
                     [at_z(0.0), at_z(1.0)]
                 })
@@ -68,6 +72,7 @@ impl Render {
                 .map(|(x, y)| Vertex {
                     a_pos: vec2(x, y).map(|x| x as f32 * 2.0 - 1.0).extend(0.0),
                     a_uv: vec2(x, y).map(|x| x as f32),
+                    a_normal: vec3::UNIT_Z, // TODO maybe?
                 })
                 .collect(),
         );
@@ -108,6 +113,42 @@ impl Render {
         matrix: mat4<f32>,
     ) {
         self.sprite_ext(framebuffer, camera, texture, matrix, Rgba::WHITE, true)
+    }
+
+    pub fn thick(
+        &self,
+        framebuffer: &mut ugli::Framebuffer,
+        camera: &dyn AbstractCamera3d,
+        thick: &ThickSprite<Vertex>,
+        matrix: mat4<f32>,
+    ) {
+        let framebuffer_size = framebuffer.size().map(|x| x as f32);
+        let (player_pos, player_radius) = self.player.get().unwrap_or((vec3::ZERO, 0.0));
+        ugli::draw(
+            framebuffer,
+            &self.assets.shaders.texture,
+            ugli::DrawMode::Triangles,
+            &thick.mesh,
+            (
+                ugli::uniforms! {
+                    u_texture: &thick.texture,
+                    u_texture_size: thick.texture.size(),
+                    u_model_matrix: matrix,
+                    u_uv_matrix: mat3::identity(),
+                    u_fog_color: self.config.fog_color,
+                    u_fog_distance: self.config.fog_distance,
+                    u_color: Rgba::WHITE,
+                    u_player_pos: player_pos,
+                    u_player_radius: player_radius,
+                },
+                camera.uniforms(framebuffer_size),
+            ),
+            ugli::DrawParameters {
+                // blend_mode: Some(ugli::BlendMode::straight_alpha()),
+                depth_func: Some(ugli::DepthFunc::Less),
+                ..default()
+            },
+        );
     }
 
     pub fn color_overlay(&self, framebuffer: &mut ugli::Framebuffer, color: Rgba<f32>) {

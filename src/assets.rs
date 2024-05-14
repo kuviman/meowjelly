@@ -1,3 +1,5 @@
+use geng_thick_sprite::ThickSprite;
+
 use super::*;
 
 #[derive(geng::asset::Load)]
@@ -40,8 +42,14 @@ pub struct Sfx {
     pub coin: geng::Sound,
 }
 
+#[derive(Deserialize)]
+pub struct ObstacleConfig {
+    pub thickness: f32,
+}
+
 pub struct Obstacle {
-    pub texture: ugli::Texture,
+    pub config: ObstacleConfig,
+    pub sprite: ThickSprite<render::Vertex>,
     pub data: Vec<Vec<Rgba<u8>>>,
 }
 
@@ -52,18 +60,38 @@ impl geng::asset::Load for Obstacle {
         _options: &Self::Options,
     ) -> geng::asset::Future<Self> {
         let manager = manager.clone();
-        let texture = manager.load(path);
+        let path = path.to_owned();
+
         async move {
-            let texture = texture.await?;
+            let sprite = manager
+                .load_with::<ThickSprite<render::Vertex>>(
+                    path.with_extension("png"),
+                    &geng_thick_sprite::Options {
+                        // cell_size: 1,
+                        // iso: 0.5,
+                        normal_uv_offset: 3.0,
+                        ..default()
+                    },
+                )
+                .await?;
+            let config: ObstacleConfig = file::load_detect(path.with_extension("toml")).await?;
             let fb = ugli::FramebufferRead::new_color(
                 manager.ugli(),
-                ugli::ColorAttachmentRead::Texture(&texture),
+                ugli::ColorAttachmentRead::Texture(&sprite.texture),
             );
             let data = fb.read_color();
-            let data = (0..texture.size().x)
-                .map(|x| (0..texture.size().y).map(|y| data.get(x, y)).collect())
+            let data = (0..sprite.texture.size().x)
+                .map(|x| {
+                    (0..sprite.texture.size().y)
+                        .map(|y| data.get(x, y))
+                        .collect()
+                })
                 .collect();
-            Ok(Self { texture, data })
+            Ok(Self {
+                config,
+                sprite,
+                data,
+            })
         }
         .boxed_local()
     }
@@ -83,5 +111,15 @@ pub struct Assets {
     pub music: Music,
     pub sfx: Sfx,
     pub top1: ugli::Texture,
-    pub coin: ugli::Texture,
+    pub coin: ThickSprite<render::Vertex>,
+}
+
+impl From<geng_thick_sprite::Vertex> for render::Vertex {
+    fn from(value: geng_thick_sprite::Vertex) -> Self {
+        Self {
+            a_normal: value.a_normal,
+            a_pos: value.a_pos,
+            a_uv: value.a_uv,
+        }
+    }
 }

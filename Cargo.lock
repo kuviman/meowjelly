@@ -2040,6 +2040,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "geng-thick-sprite"
+version = "0.1.0"
+dependencies = [
+ "geng",
+]
+
+[[package]]
 name = "geng-ui"
 version = "0.18.0"
 source = "git+https://github.com/geng-engine/geng#103bb24681e75d2483c1fe1084897dd6d0bc56fe"
@@ -2824,6 +2831,7 @@ name = "meowjelly"
 version = "1.0.0"
 dependencies = [
  "geng",
+ "geng-thick-sprite",
  "serde",
 ]
 

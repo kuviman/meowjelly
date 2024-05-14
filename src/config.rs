@@ -123,6 +123,7 @@ pub struct Coin {
     pub radius: f32,
     pub rotation_speed: f32,
     pub skew: f32,
+    pub thickness: f32,
 }
 
 #[derive(Deserialize)]

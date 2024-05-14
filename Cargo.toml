@@ -1,8 +1,9 @@
 [workspace]
-members = ["android"]
+members = ["android", "geng-thick-sprite"]
 
 [workspace.dependencies]
 batbox-android = { git = "https://github.com/geng-engine/batbox" }
+geng = { git = "https://github.com/geng-engine/geng" }
 
 [package]
 name = "meowjelly"
@@ -13,8 +14,9 @@ edition = "2021"
 opt-level = 2
 
 [dependencies]
-geng = { git = "https://github.com/geng-engine/geng" }
 serde = "1"
+geng.workspace = true
+geng-thick-sprite = { path = "geng-thick-sprite" }
 
 [patch.crates-io]
 batbox-android = { git = "https://github.com/geng-engine/batbox" }

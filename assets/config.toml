@@ -9,6 +9,7 @@ death_distance = 2
 
 [coin]
 radius = 2
+thickness = 0.5
 rotation_speed = 100
 skew = 10
 

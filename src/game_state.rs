@@ -308,25 +308,28 @@ impl geng::State for GameState {
         }
 
         for obstacle in self.obstacles.iter().rev() {
-            self.ctx.render.sprite(
+            self.ctx.render.thick(
                 framebuffer,
                 &self.camera,
-                &obstacle.data.texture,
+                &obstacle.data.sprite,
                 mat4::translate(vec3(0.0, 0.0, obstacle.z)) * obstacle.transform,
             );
         }
 
         for &coin in self.coins.iter().rev() {
-            self.ctx.render.sprite(
+            self.ctx.render.thick(
                 framebuffer,
                 &self.camera,
                 &self.ctx.assets.coin,
                 mat4::translate(coin)
-                    * mat4::scale_uniform(self.ctx.config.coin.radius)
                     * mat4::rotate_z(Angle::from_degrees(
                         self.time * self.ctx.config.coin.rotation_speed,
                     ))
-                    * mat4::rotate_x(Angle::from_degrees(self.ctx.config.coin.skew)),
+                    * mat4::rotate_x(Angle::from_degrees(self.ctx.config.coin.skew))
+                    * mat4::scale(
+                        vec2::splat(self.ctx.config.coin.radius)
+                            .extend(self.ctx.config.coin.thickness),
+                    ),
             );
         }
 
@@ -932,21 +935,22 @@ impl geng::State for GameState {
         while self.obstacles.last().map_or(true, |last| last.z > far) {
             let last_z = self.obstacles.last().map_or(0.0, |last| last.z);
             let z = last_z - thread_rng().gen_range(self.ctx.config.obstacles.distance.range());
-            let texture = self
+            let obstacle = self
                 .ctx
                 .assets
                 .obstacles
                 .choose(&mut thread_rng())
                 .unwrap()
                 .clone();
-            let mut aspect = texture.texture.size().map(|x| x as f32).aspect();
-            let mut transform = mat4::identity();
+            let mut aspect = obstacle.sprite.texture.size().map(|x| x as f32).aspect();
+            let mut transform = mat4::scale(vec3(1.0, 1.0, obstacle.config.thickness));
             if aspect >= 1.0 {
                 // transform *= mat4::rotate_z(Angle::from_degrees(90.0));
                 aspect = 1.0 / aspect;
             }
             transform =
-                mat4::scale(vec3(1.0, 1.0 / aspect, 1.0) * self.ctx.config.tube_radius) * transform;
+                mat4::scale((vec2(1.0, 1.0 / aspect) * self.ctx.config.tube_radius).extend(1.0))
+                    * transform;
             transform = mat4::rotate_x(Angle::from_radians(
                 aspect.acos() * if thread_rng().gen() { -1.0 } else { 1.0 },
             )) * transform;
@@ -961,7 +965,7 @@ impl geng::State for GameState {
             self.obstacles.push(Obstacle {
                 z,
                 transform,
-                data: texture,
+                data: obstacle,
             });
         }
         self.obstacles
