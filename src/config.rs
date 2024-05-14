@@ -124,6 +124,7 @@ pub struct Coin {
     pub rotation_speed: f32,
     pub skew: f32,
     pub thickness: f32,
+    pub particles: usize,
 }
 
 #[derive(Deserialize)]

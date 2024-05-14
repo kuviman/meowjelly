@@ -32,6 +32,7 @@ pub struct Config {
     pub movement: Rc<SpawnerConfig>,
     pub bounce: Rc<SpawnerConfig>,
     pub death: Rc<SpawnerConfig>,
+    pub coin: Rc<SpawnerConfig>,
 }
 
 #[derive(Deserialize)]

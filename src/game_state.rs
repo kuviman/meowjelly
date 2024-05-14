@@ -660,7 +660,7 @@ impl geng::State for GameState {
             if let Some(index) = self.coins.iter().position(|&coin| {
                 (coin - player.pos).len() < player.radius + self.ctx.config.coin.radius
             }) {
-                self.coins.remove(index);
+                let coin = self.coins.remove(index);
                 self.score += self.ctx.config.score.coin;
                 let mut effect = self.ctx.assets.sfx.coin.effect();
                 effect.set_volume(self.ctx.config.sfx.coin_volume);
@@ -668,6 +668,13 @@ impl geng::State for GameState {
                     1.0 + thread_rng().gen_range(-1.0..=1.0) * self.ctx.config.sfx.coin_speed_range,
                 );
                 effect.play();
+
+                let mut spawner = self.ctx.particles.spawner(&self.ctx.particles.config.coin);
+                spawner.pos = coin;
+                spawner.vel.z = player.vel.z;
+                for _ in 0..self.ctx.config.coin.particles {
+                    spawner.spawn();
+                }
             }
 
             self.wind.set_volume(

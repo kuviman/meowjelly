@@ -10,6 +10,18 @@ extra_hue = 0.2
 extra_saturation = 0.1
 extra_lightness = 0.1
 
+[coin]
+freq = 20
+life = 0.1
+size = 0.7
+color = "#ff02"
+extra_vel = 20
+extra_life = 0.1
+extra_size = 0.8
+extra_hue = 0.01
+extra_saturation = 0.01
+extra_lightness = 0.01
+
 [bounce]
 freq = 40
 life = 0.5
