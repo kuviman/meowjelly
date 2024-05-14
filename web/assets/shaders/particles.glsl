@@ -21,7 +21,7 @@ void main() {
   v_t = (u_time - i_start_time) / (i_end_time - i_start_time);
   v_color = i_color;
   v_color.a *= (1.0 - v_t);
-  vec3 world_pos = i_pos + i_vel * v_t + vec3(a_pos, 0.0) * i_size;
+  vec3 world_pos = i_pos + i_vel * (u_time - i_start_time) + vec3(a_pos, 0.0) * i_size;
   gl_Position = u_projection_matrix * u_view_matrix * vec4(world_pos, 1.0);
 }
 #endif
