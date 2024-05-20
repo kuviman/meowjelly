@@ -302,7 +302,9 @@ impl GameState {
             {
                 #[cfg(feature = "yandex")]
                 {
+                    ctx.geng.audio().set_volume(0.0);
                     let result = ctx.yandex.sdk.show_fullscreen_adv().await;
+                    ctx.geng.audio().set_volume(1.0);
                     log::info!("showed ad: {:?}", result);
                 }
             }
