@@ -2,7 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use wasm_bindgen::prelude::*;
 
-mod ya_sys {
+mod ysdk_sys {
     use super::*;
 
     #[wasm_bindgen]
@@ -35,17 +35,61 @@ mod ya_sys {
             on_error: Option<js_sys::Function>,
             on_offline: Option<js_sys::Function>,
         );
+        pub fn get_player(ysdk: &YaGames, scopes: bool) -> js_sys::Promise;
+        pub fn player_unique_id(player: &JsValue) -> String;
+        pub async fn get_player_numeric_data(player: &JsValue, key: &str) -> JsValue;
+        #[wasm_bindgen(catch)]
+        pub async fn set_player_numeric_data(
+            player: &JsValue,
+            key: &str,
+            value: f64,
+        ) -> Result<JsValue, JsValue>;
+    }
+}
+
+pub struct Player(JsValue);
+
+impl Player {
+    pub fn unique_id(&self) -> String {
+        ysdk_sys::player_unique_id(&self.0)
+    }
+    pub async fn numeric_data(&self, key: &str) -> Option<f64> {
+        let result = ysdk_sys::get_player_numeric_data(&self.0, key).await;
+        if let Some(value) = result.as_f64() {
+            return Some(value);
+        }
+        if result.is_null() || result.is_undefined() {
+            return None;
+        }
+        panic!("wtf");
+    }
+    pub async fn set_numeric_data(&self, key: &str, value: f64) -> Result<(), Error> {
+        match ysdk_sys::set_player_numeric_data(&self.0, key, value).await {
+            Ok(value) => {
+                assert!(value.is_undefined());
+                Ok(())
+            }
+            Err(e) => Err(Error::Js(e)),
+        }
     }
 }
 
 pub struct Ysdk {
-    inner: ya_sys::YaGames,
+    inner: ysdk_sys::YaGames,
 }
 
 impl Ysdk {
     /// Informing the SDK that the game has loaded and is ready to play
     pub fn ready(&self) {
-        ya_sys::ready(&self.inner);
+        ysdk_sys::ready(&self.inner);
+    }
+
+    pub async fn player(&self, scopes: bool) -> Result<Player, Error> {
+        match wasm_bindgen_futures::JsFuture::from(ysdk_sys::get_player(&self.inner, scopes)).await
+        {
+            Ok(player) => Ok(Player(player)),
+            Err(err) => Err(Error::Js(err)),
+        }
     }
 
     pub async fn show_fullscreen_adv(&self) -> Result<bool, Error> {
@@ -75,7 +119,7 @@ impl Ysdk {
         })
         .dyn_into()
         .unwrap();
-        ya_sys::show_fullscreen_adv(
+        ysdk_sys::show_fullscreen_adv(
             &self.inner,
             Some(on_close),
             None,
@@ -86,7 +130,7 @@ impl Ysdk {
     }
 }
 
-pub struct DeviceInfo(ya_sys::DeviceInfo);
+pub struct DeviceInfo(ysdk_sys::DeviceInfo);
 
 impl Ysdk {
     pub fn device_info(&self) -> DeviceInfo {
@@ -147,7 +191,7 @@ impl Ysdk {
             .map_err(|async_oneshot::Closed()| Error::Unknown)?;
         Ok(Self {
             inner: {
-                let obj = wasm_bindgen_futures::JsFuture::from(ya_sys::YaGames::init())
+                let obj = wasm_bindgen_futures::JsFuture::from(ysdk_sys::YaGames::init())
                     .await
                     .unwrap();
                 obj.unchecked_into()

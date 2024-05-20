@@ -6,6 +6,12 @@ pub struct Ctx {
     inner: Rc<CtxInner>,
 }
 
+#[cfg(feature = "yandex")]
+pub struct Yandex {
+    pub sdk: ysdk::Ysdk,
+    pub player: ysdk::Player,
+}
+
 pub struct CtxInner {
     pub geng: Geng,
     pub assets: assets::Assets,
@@ -14,7 +20,7 @@ pub struct CtxInner {
     pub particles: particles::Particles,
     pub controls: controls::Controls,
     #[cfg(feature = "yandex")]
-    pub ysdk: ysdk::Ysdk,
+    pub yandex: Yandex,
 }
 
 impl Ctx {
@@ -42,7 +48,11 @@ impl Ctx {
                 render,
                 particles,
                 #[cfg(feature = "yandex")]
-                ysdk: ysdk::Ysdk::init().await.expect("Failed to initialize ysdk"),
+                yandex: {
+                    let sdk = ysdk::Ysdk::init().await.expect("Failed to initialize ysdk");
+                    let player = sdk.player(false).await.unwrap();
+                    Yandex { sdk, player }
+                },
             }),
         }
     }

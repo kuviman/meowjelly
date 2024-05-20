@@ -154,6 +154,7 @@ pub struct GameState {
     ctx: Ctx,
     time: f32,
     camera: Camera,
+    money: u64,
     player: Option<Player>,
     death_location: Option<vec3<f32>>,
     transition: Option<geng::state::Transition>,
@@ -172,15 +173,20 @@ pub struct GameState {
     score_digits: Vec<DigitPlace>,
     coins: Vec<vec3<f32>>,
     finish_ad_shown: bool,
+    need_restart: bool,
 }
 
 impl GameState {
-    pub fn new(ctx: &Ctx) -> Self {
+    pub async fn new(ctx: &Ctx) -> Self {
         let mut effect = ctx.assets.sfx.start.effect();
         effect.set_volume(ctx.config.sfx.start_volume);
         effect.play();
 
         Self {
+            #[cfg(feature = "yandex")]
+            money: ctx.yandex.player.numeric_data("money").await.unwrap_or(0.0) as u64,
+            #[cfg(not(feature = "yandex"))]
+            money: preferences::load("money").unwrap_or(0),
             finish_ad_shown: false,
             coins: Vec::new(),
             best_score: preferences::load("best_score").unwrap_or(0),
@@ -195,6 +201,7 @@ impl GameState {
             wind: ctx.sound_effect(&ctx.assets.sfx.wind, 0.0),
             swim: ctx.sound_effect(&ctx.assets.sfx.swim, 0.0),
             music: ctx.start_music(&ctx.assets.music.piano),
+            need_restart: false,
             camera: Camera {
                 pos: vec3::ZERO,
                 fov: Angle::from_degrees(ctx.config.camera.start_fov),
@@ -226,7 +233,7 @@ impl GameState {
     }
 
     fn restart(&mut self) {
-        *self = Self::new(&self.ctx);
+        self.need_restart = true;
     }
 
     fn key_press(&mut self, key: geng::Key) {
@@ -284,20 +291,23 @@ impl GameState {
         let mut timer = Timer::new();
         while let Some(event) = ctx.geng.window().events().next().await {
             if let geng::Event::Draw = event {
+                self.update(timer.tick()).await;
                 geng::async_state::with_current_framebuffer(ctx.geng.window(), |framebuffer| {
-                    self.update(timer.tick());
                     self.draw(framebuffer)
                 });
             } else {
                 self.handle_event(event);
             }
-            #[allow(clippy::collapsible_if)]
             if self.finished.unwrap_or(0.0) > 1.0 && !mem::replace(&mut self.finish_ad_shown, true)
             {
-                if cfg!(feature = "yandex") {
-                    let result = ctx.ysdk.show_fullscreen_adv().await;
+                #[cfg(feature = "yandex")]
+                {
+                    let result = ctx.yandex.sdk.show_fullscreen_adv().await;
                     log::info!("showed ad: {:?}", result);
                 }
+            }
+            if self.need_restart {
+                self = Self::new(&self.ctx).await;
             }
         }
     }
@@ -570,6 +580,22 @@ impl GameState {
                 mat4::scale(vec3(1.0 / framebuffer_size.aspect(), 1.0, 1.0) / self.fov * 2.0)
             }
         }
+        {
+            // money
+            let money_string = self.money.to_string();
+            for (i, c) in money_string.chars().enumerate() {
+                let x =
+                    i as f32 * self.ctx.config.digit_size - (money_string.len() as f32 - 1.0) / 2.0;
+                let digit = c.to_digit(10).unwrap();
+                self.ctx.render.digit(
+                    framebuffer,
+                    &camera,
+                    digit as f32,
+                    Rgba::WHITE,
+                    mat4::translate(vec3(x, -2.0, 0.0) + self.ctx.config.score.pos),
+                );
+            }
+        }
         for (i, digit) in self.score_digits.iter().rev().enumerate() {
             let x = i as f32 * self.ctx.config.digit_size
                 - (self.score_digits.len() as f32 - 1.0) / 2.0;
@@ -616,7 +642,7 @@ impl GameState {
             );
         }
     }
-    fn update(&mut self, delta_time: time::Duration) {
+    async fn update(&mut self, delta_time: time::Duration) {
         let delta_time = delta_time.as_secs_f64() as f32;
 
         if self.started.is_some() {
@@ -648,6 +674,7 @@ impl GameState {
             }
             self.ctx.assets.sfx.death.play();
             self.music = self.ctx.start_music(&self.ctx.assets.music.mallet);
+            self.save_money().await;
         }
         if let Some(time) = &mut self.finished {
             *time += delta_time / self.ctx.config.finish_time;
@@ -684,6 +711,7 @@ impl GameState {
                 (coin - player.pos).len() < player.radius + self.ctx.config.coin.radius
             }) {
                 let coin = self.coins.remove(index);
+                self.money += 1;
                 self.score += self.ctx.config.score.coin;
                 let mut effect = self.ctx.assets.sfx.coin.effect();
                 effect.set_volume(self.ctx.config.sfx.coin_volume);
@@ -1031,5 +1059,20 @@ impl GameState {
     }
     fn transition(&mut self) -> Option<geng::state::Transition> {
         self.transition.take()
+    }
+
+    async fn save_money(&self) {
+        #[cfg(feature = "yandex")]
+        {
+            if let Err(e) = self
+                .ctx
+                .yandex
+                .player
+                .set_numeric_data("money", self.money as f64)
+                .await
+            {
+                log::error!("money could not be saved: {e}");
+            }
+        }
     }
 }

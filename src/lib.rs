@@ -25,9 +25,10 @@ async fn run(geng: Geng) {
         future::Either::Right(_) => return,
     };
     let ctx = &ctx;
+    let game = game_state::GameState::new(ctx).await;
     #[cfg(feature = "yandex")]
-    ctx.ysdk.ready();
-    game_state::GameState::new(ctx).run().await;
+    ctx.yandex.sdk.ready();
+    game.run().await;
 }
 
 #[derive(clap::Parser)]
