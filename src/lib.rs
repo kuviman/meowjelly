@@ -25,7 +25,9 @@ async fn run(geng: Geng) {
         future::Either::Right(_) => return,
     };
     let ctx = &ctx;
-    geng.run_state(game_state::GameState::new(ctx)).await;
+    #[cfg(feature = "yandex")]
+    ctx.ysdk.ready();
+    game_state::GameState::new(ctx).run().await;
 }
 
 #[derive(clap::Parser)]
@@ -38,7 +40,11 @@ pub fn main() {
     logger::init();
     geng::setup_panic_handler();
 
-    let args: CliArgs = cli::parse();
+    let args: CliArgs = if cfg!(feature = "yandex") {
+        <CliArgs as clap::Parser>::parse_from::<[&str; 0], _>([])
+    } else {
+        cli::parse()
+    };
     let mut options = geng::ContextOptions::default();
     options.window.title = format!(
         "{name} v{version}",

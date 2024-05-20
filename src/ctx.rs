@@ -13,6 +13,8 @@ pub struct CtxInner {
     pub render: render::Render,
     pub particles: particles::Particles,
     pub controls: controls::Controls,
+    #[cfg(feature = "yandex")]
+    pub ysdk: ysdk::Ysdk,
 }
 
 impl Ctx {
@@ -39,6 +41,8 @@ impl Ctx {
                 controls,
                 render,
                 particles,
+                #[cfg(feature = "yandex")]
+                ysdk: ysdk::Ysdk::init().await.expect("Failed to initialize ysdk"),
             }),
         }
     }

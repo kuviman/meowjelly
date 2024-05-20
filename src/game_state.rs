@@ -171,6 +171,7 @@ pub struct GameState {
     score: f32,
     score_digits: Vec<DigitPlace>,
     coins: Vec<vec3<f32>>,
+    finish_ad_shown: bool,
 }
 
 impl GameState {
@@ -180,6 +181,7 @@ impl GameState {
         effect.play();
 
         Self {
+            finish_ad_shown: false,
             coins: Vec::new(),
             best_score: preferences::load("best_score").unwrap_or(0),
             score: 0.0,
@@ -276,9 +278,30 @@ impl GameState {
     fn touch_end(&mut self) {
         self.touch_control = None;
     }
-}
 
-impl geng::State for GameState {
+    pub async fn run(mut self) {
+        let ctx = self.ctx.clone();
+        let mut timer = Timer::new();
+        while let Some(event) = ctx.geng.window().events().next().await {
+            if let geng::Event::Draw = event {
+                geng::async_state::with_current_framebuffer(ctx.geng.window(), |framebuffer| {
+                    self.update(timer.tick());
+                    self.draw(framebuffer)
+                });
+            } else {
+                self.handle_event(event);
+            }
+            #[allow(clippy::collapsible_if)]
+            if self.finished.unwrap_or(0.0) > 1.0 && !mem::replace(&mut self.finish_ad_shown, true)
+            {
+                if cfg!(feature = "yandex") {
+                    let result = ctx.ysdk.show_fullscreen_adv().await;
+                    log::info!("showed ad: {:?}", result);
+                }
+            }
+        }
+    }
+
     fn draw(&mut self, framebuffer: &mut ugli::Framebuffer) {
         self.ctx.render.player.set(
             self.player
@@ -593,8 +616,8 @@ impl geng::State for GameState {
             );
         }
     }
-    fn update(&mut self, delta_time: f64) {
-        let delta_time = delta_time as f32;
+    fn update(&mut self, delta_time: time::Duration) {
+        let delta_time = delta_time.as_secs_f64() as f32;
 
         if self.started.is_some() {
             let mut score = self.score as i32;
