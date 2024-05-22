@@ -1077,5 +1077,9 @@ impl GameState {
                 log::error!("money could not be saved: {e}");
             }
         }
+        #[cfg(not(feature = "yandex"))]
+        {
+            preferences::save("money", &self.money);
+        }
     }
 }
