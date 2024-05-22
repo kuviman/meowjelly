@@ -111,6 +111,8 @@ pub struct Assets {
     pub sfx: Sfx,
     pub top1: ugli::Texture,
     pub coin: ThickSprite<render::Vertex>,
+    pub coin_icon: ugli::Texture,
+    pub score_icon: ugli::Texture,
 }
 
 impl From<geng_sprite_shape::Vertex> for render::Vertex {

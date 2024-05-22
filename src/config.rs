@@ -111,7 +111,8 @@ pub struct Sfx {
 #[derive(Deserialize)]
 pub struct Score {
     pub best_pos: vec3<f32>,
-    pub pos: vec3<f32>,
+    pub offset: vec2<f32>,
+    pub icon_offset: vec2<f32>,
     pub distance: f32,
     pub coin: f32,
     pub digit_update_speed: f32,
@@ -128,7 +129,14 @@ pub struct Coin {
 }
 
 #[derive(Deserialize)]
+pub struct MoneyConfig {
+    pub offset: vec2<f32>,
+    pub icon_offset: vec2<f32>,
+}
+
+#[derive(Deserialize)]
 pub struct Config {
+    pub money: MoneyConfig,
     pub coin: Coin,
     pub digit_size: f32,
     pub score: Score,

@@ -94,12 +94,13 @@ impl Render {
         color: Rgba<f32>,
         matrix: mat4<f32>,
     ) {
-        let digit = (value.round() as i32).rem_euclid(10) as usize;
+        let rounded = value.round() as i32;
+        let digit = rounded.rem_euclid(10) as usize;
         self.sprite_ext(
             framebuffer,
             camera,
             &self.assets.digits[digit],
-            matrix * mat4::rotate_x(Angle::from_degrees(value.fract() * 360.0)),
+            matrix * mat4::rotate_x(Angle::from_degrees((value - rounded as f32) * 180.0)),
             color,
             false,
         )

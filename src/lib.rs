@@ -5,6 +5,7 @@ mod config;
 mod controls;
 mod ctx;
 mod easings;
+mod fancy_number;
 mod game_state;
 mod loading;
 mod particles;

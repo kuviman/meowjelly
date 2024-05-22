@@ -1,4 +1,4 @@
-use self::particles::ParticleSpawner;
+use self::{fancy_number::FancyNumber, particles::ParticleSpawner};
 
 use super::*;
 
@@ -129,23 +129,6 @@ impl Ctx {
     }
 }
 
-struct DigitPlace {
-    current_value: f32,
-    target_value: i32,
-}
-
-impl DigitPlace {
-    pub fn new() -> Self {
-        Self {
-            current_value: -0.5,
-            target_value: 0,
-        }
-    }
-    pub fn update(&mut self, delta_time: f32) {
-        self.current_value += (self.target_value as f32 - self.current_value) * delta_time.min(1.0);
-    }
-}
-
 /// Sarah is adorable
 pub struct GameState {
     key_input: bool,
@@ -158,7 +141,6 @@ pub struct GameState {
     money: u64,
     player: Option<Player>,
     death_location: Option<vec3<f32>>,
-    transition: Option<geng::state::Transition>,
     walls: Vec<Wall>,
     obstacles: Vec<Obstacle>,
     touch_control: Option<TouchControl>,
@@ -171,7 +153,8 @@ pub struct GameState {
     wind: SoundEffect,
     swim: SoundEffect,
     score: f32,
-    score_digits: Vec<DigitPlace>,
+    score_fancy: FancyNumber,
+    money_fancy: FancyNumber,
     coins: Vec<vec3<f32>>,
     finish_ad_shown: bool,
     need_restart: bool,
@@ -192,7 +175,8 @@ impl GameState {
             coins: Vec::new(),
             best_score: preferences::load("best_score").unwrap_or(0),
             score: 0.0,
-            score_digits: Vec::new(),
+            score_fancy: FancyNumber::new(ctx, 0),
+            money_fancy: FancyNumber::new(ctx, 0),
             ctx: ctx.clone(),
             finished: None,
             time: 0.0,
@@ -223,7 +207,6 @@ impl GameState {
                 radius: ctx.config.player.radius,
                 move_particles: ctx.particles.spawner(&ctx.particles.config.movement),
             }),
-            transition: None,
             walls: Vec::new(),
             touch_control: None,
             bounce: None,
@@ -240,7 +223,7 @@ impl GameState {
     fn key_press(&mut self, key: geng::Key) {
         self.key_input = true;
         if self.ctx.controls.quit.contains(&key) && !cfg!(target_arch = "wasm32") {
-            self.transition = Some(geng::state::Transition::Pop);
+            // TODO: exit maybe potentially?
         }
         if self.ctx.controls.restart.contains(&key) {
             self.restart();
@@ -568,59 +551,69 @@ impl GameState {
             }
         }
 
-        // score
+        self.draw_ui(framebuffer);
+    }
+
+    fn draw_ui(&mut self, framebuffer: &mut ugli::Framebuffer) {
         struct OrthoCam {
             fov: f32,
         }
-        let camera = OrthoCam {
-            fov: self.ctx.config.score.fov,
-        };
+        impl OrthoCam {
+            fn view_area(&self, framebuffer_size: vec2<f32>) -> Aabb2<f32> {
+                let im = (self.projection_matrix(framebuffer_size) * self.view_matrix()).inverse();
+                Aabb2::ZERO
+                    .extend_uniform(1.0)
+                    .map_bounds(|v| (im * v.extend(0.0).extend(1.0)).into_3d().xy())
+            }
+        }
         impl AbstractCamera3d for OrthoCam {
             fn view_matrix(&self) -> mat4<f32> {
                 mat4::identity()
             }
             fn projection_matrix(&self, framebuffer_size: vec2<f32>) -> mat4<f32> {
-                mat4::scale(vec3(1.0 / framebuffer_size.aspect(), 1.0, 1.0) / self.fov * 2.0)
+                let aspect = framebuffer_size.aspect();
+                if aspect > 1.0 {
+                    mat4::scale(vec3(1.0 / aspect, 1.0, 1.0) / self.fov * 2.0)
+                } else {
+                    mat4::scale(vec3(1.0, aspect, 1.0) / self.fov * 2.0)
+                }
             }
         }
-        {
-            // money
-            let money_string = self.money.to_string();
-            for (i, c) in money_string.chars().enumerate() {
-                let x =
-                    i as f32 * self.ctx.config.digit_size - (money_string.len() as f32 - 1.0) / 2.0;
-                let digit = c.to_digit(10).unwrap();
-                self.ctx.render.digit(
-                    framebuffer,
-                    &camera,
-                    digit as f32,
-                    Rgba::WHITE,
-                    mat4::translate(vec3(x, -2.0, 0.0) + self.ctx.config.score.pos),
-                );
-            }
-        }
-        for (i, digit) in self.score_digits.iter().rev().enumerate() {
-            let x = i as f32 * self.ctx.config.digit_size
-                - (self.score_digits.len() as f32 - 1.0) / 2.0;
-            self.ctx.render.digit(
-                framebuffer,
-                &camera,
-                digit.current_value,
-                Rgba::WHITE,
-                mat4::translate(vec3(x, 0.0, 0.0) + self.ctx.config.score.pos),
-            );
-        }
-        if self.score as i32 >= self.best_score && !self.score_digits.is_empty() {
-            self.ctx.render.sprite(
-                framebuffer,
-                &camera,
-                &self.ctx.assets.top1,
-                mat4::translate(
-                    vec3(-(self.score_digits.len() as f32 + 3.0) / 2.0, 0.0, 0.0)
-                        + self.ctx.config.score.pos,
-                ),
-            );
-        } else if let Some(finished) = self.finished {
+        let camera = OrthoCam {
+            fov: self.ctx.config.score.fov,
+        };
+        let camera_bb = camera.view_area(self.framebuffer_size);
+        self.ctx.render.sprite(
+            framebuffer,
+            &camera,
+            &self.ctx.assets.coin_icon,
+            mat4::translate(
+                (camera_bb.top_right() + self.ctx.config.money.icon_offset).extend(0.0),
+            ),
+        );
+        self.money_fancy.draw(
+            framebuffer,
+            &camera,
+            1.0,
+            mat4::translate((camera_bb.top_right() + self.ctx.config.money.offset).extend(0.0)),
+        );
+        self.ctx.render.sprite(
+            framebuffer,
+            &camera,
+            if self.score as i32 >= self.best_score {
+                &self.ctx.assets.top1
+            } else {
+                &self.ctx.assets.score_icon
+            },
+            mat4::translate((camera_bb.top_left() + self.ctx.config.score.icon_offset).extend(0.0)),
+        );
+        self.score_fancy.draw(
+            framebuffer,
+            &camera,
+            0.0,
+            mat4::translate((camera_bb.top_left() + self.ctx.config.score.offset).extend(0.0)),
+        );
+        if let Some(finished) = self.finished {
             let alpha = finished.min(1.0);
             let best_score = self.best_score.to_string();
             for (i, digit) in best_score.chars().enumerate() {
@@ -649,20 +642,12 @@ impl GameState {
         let delta_time = delta_time.as_secs_f64() as f32;
 
         if self.started.is_some() {
-            let mut score = self.score as i32;
-            let mut i = 0;
-            while score != 0 || self.score_digits.is_empty() {
-                if i >= self.score_digits.len() {
-                    self.score_digits.push(DigitPlace::new());
-                }
-                self.score_digits[i].target_value = score;
-                score /= 10;
-                i += 1;
-            }
+            self.score_fancy.set_value(self.score as i32);
         }
-        for digit in &mut self.score_digits {
-            digit.update(delta_time * self.ctx.config.score.digit_update_speed);
-        }
+        self.score_fancy.update(delta_time);
+
+        self.money_fancy.set_value(self.money as i32);
+        self.money_fancy.update(delta_time);
 
         self.time += delta_time;
         if let Some(time) = &mut self.started {
@@ -1060,10 +1045,6 @@ impl GameState {
             _ => {}
         }
     }
-    fn transition(&mut self) -> Option<geng::state::Transition> {
-        self.transition.take()
-    }
-
     async fn save_money(&self) {
         #[cfg(feature = "yandex")]
         {
