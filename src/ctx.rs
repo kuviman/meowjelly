@@ -59,6 +59,7 @@ impl Ctx {
                         if #[cfg(feature = "yandex")] {
                             yandex.sdk.device_info().is_mobile()
                         } else if #[cfg(target_arch = "wasm32")] {
+                            use wasm_bindgen::prelude::*;
                             #[wasm_bindgen(module = "/src/detectmobilebrowser.js")]
                             extern "C" {
                                 fn is_mobile_or_tablet() -> bool;
