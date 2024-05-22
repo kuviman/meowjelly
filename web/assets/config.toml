@@ -74,7 +74,7 @@ alpha = 0.6
 [player]
 max_speed = 20
 acceleration = 300
-fall_speed = 70
+fall_speed = 40
 fall_acceleration = 10
 fall_slow_acceleration = 1
 radius = 1
