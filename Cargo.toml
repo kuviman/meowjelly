@@ -1,5 +1,5 @@
 [workspace]
-members = ["android", "geng-thick-sprite", "ysdk"]
+members = ["android", "ysdk"]
 
 [workspace.dependencies]
 batbox-logger = "0.16"
@@ -21,7 +21,7 @@ opt-level = 2
 [dependencies]
 serde = "1"
 geng.workspace = true
-geng-thick-sprite = { path = "geng-thick-sprite" }
+geng-sprite-shape = { git = "https://github.com/kuviman/sprite-shape" }
 ysdk = { path = "ysdk", optional = true }
 
 [patch.crates-io]

@@ -1,4 +1,4 @@
-use geng_thick_sprite::ThickSprite;
+use geng_sprite_shape::ThickSprite;
 
 use super::*;
 
@@ -66,18 +66,17 @@ impl geng::asset::Load for Obstacle {
             let sprite = manager
                 .load_with::<ThickSprite<render::Vertex>>(
                     path.with_extension("png"),
-                    &geng_thick_sprite::Options {
-                        // cell_size: 1,
-                        // iso: 0.5,
-                        normal_uv_offset: 3.0,
+                    &geng_sprite_shape::Options {
+                        thickness: 1.0,
                         ..default()
                     },
                 )
                 .await?;
             let config: ObstacleConfig = file::load_detect(path.with_extension("toml")).await?;
+            let original_texture: ugli::Texture = manager.load(path.with_extension("png")).await?;
             let fb = ugli::FramebufferRead::new_color(
                 manager.ugli(),
-                ugli::ColorAttachmentRead::Texture(&sprite.texture),
+                ugli::ColorAttachmentRead::Texture(&original_texture),
             );
             let data = fb.read_color();
             let data = (0..sprite.texture.size().x)
@@ -114,8 +113,8 @@ pub struct Assets {
     pub coin: ThickSprite<render::Vertex>,
 }
 
-impl From<geng_thick_sprite::Vertex> for render::Vertex {
-    fn from(value: geng_thick_sprite::Vertex) -> Self {
+impl From<geng_sprite_shape::Vertex> for render::Vertex {
+    fn from(value: geng_sprite_shape::Vertex) -> Self {
         Self {
             a_normal: value.a_normal,
             a_pos: value.a_pos,

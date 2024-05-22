@@ -1003,7 +1003,7 @@ impl GameState {
                 .unwrap()
                 .clone();
             let mut aspect = obstacle.sprite.texture.size().map(|x| x as f32).aspect();
-            let mut transform = mat4::scale(vec3(1.0, 1.0, obstacle.config.thickness));
+            let mut transform = mat4::scale(vec3(1.0 / aspect, 1.0, obstacle.config.thickness));
             if aspect >= 1.0 {
                 // transform *= mat4::rotate_z(Angle::from_degrees(90.0));
                 aspect = 1.0 / aspect;

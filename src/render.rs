@@ -1,4 +1,4 @@
-use geng_thick_sprite::ThickSprite;
+use geng_sprite_shape::ThickSprite;
 
 use super::*;
 
@@ -122,6 +122,7 @@ impl Render {
         thick: &ThickSprite<Vertex>,
         matrix: mat4<f32>,
     ) {
+        let matrix = matrix * mat4::scale_uniform(2.0);
         let framebuffer_size = framebuffer.size().map(|x| x as f32);
         let (player_pos, player_radius) = self.player.get().unwrap_or((vec3::ZERO, 0.0));
         ugli::draw(
