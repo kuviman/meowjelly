@@ -146,6 +146,7 @@ impl DigitPlace {
     }
 }
 
+/// Sarah is adorable
 pub struct GameState {
     key_input: bool,
     best_score: i32,
