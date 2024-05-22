@@ -7,6 +7,10 @@ bounce_particles = 10
 bounce_particle_speed = 10
 death_distance = 2
 
+[money]
+offset = [-3, -1.5]
+icon_offset = [-1.5, -1.5]
+
 [coin]
 radius = 2
 thickness = 0.5
@@ -16,7 +20,8 @@ particles = 10
 
 [score]
 best_pos = [0, 6, -1]
-pos = [0, 9, -1]
+icon_offset = [1.5, -1.5]
+offset = [3, -1.5]
 fov = 22
 distance = 0.05
 coin = 25
@@ -40,10 +45,10 @@ fade_time = 1
 [tutorial]
 scale = 0.001
 touch_pos = [0, -1.5, 0]
-wasd_pos = [-1, 1.5, 0]
-arrows_pos = [1, 1.5, 0]
-r_pos = [-2, -3.5, 0]
-touch_restart_pos = [2, -3.5, 0]
+wasd_pos = [-1, -1.5, 0]
+arrows_pos = [1, -1.5, 0]
+r_pos = [0, -3.5, 0]
+touch_restart_pos = [0, -3.5, 0]
 final_scale = 0.003
 
 [obstacles]
