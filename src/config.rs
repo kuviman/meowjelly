@@ -10,18 +10,25 @@ pub struct Camera {
 }
 
 #[derive(Deserialize)]
+pub struct PlayerControl {
+    pub max_speed: f32,
+    pub acceleration: f32,
+}
+
+#[derive(Deserialize)]
 pub struct Player {
     pub fall_speed: f32,
     pub fall_acceleration: f32,
     pub fall_slow_acceleration: f32,
-    pub max_speed: f32,
-    pub acceleration: f32,
     pub radius: f32,
     pub bounce_speed: f32,
     pub bounce_time: f32,
     pub rotate_angle: f32,
     pub particle_speed_ratio: f32,
     pub death_radius: f32,
+
+    pub keyboard_control: PlayerControl,
+    pub touch_control: PlayerControl,
 }
 
 #[derive(Deserialize)]
@@ -33,7 +40,6 @@ pub struct Shadow {
 
 #[derive(Deserialize)]
 pub struct TouchControl {
-    pub max_speed: f32,
     pub small_radius: f32,
     pub big_radius: f32,
 }

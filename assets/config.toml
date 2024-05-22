@@ -72,8 +72,6 @@ scale = 4
 alpha = 0.6
 
 [player]
-max_speed = 20
-acceleration = 300
 fall_speed = 40
 fall_acceleration = 10
 fall_slow_acceleration = 1
@@ -89,8 +87,15 @@ speed = 0
 amplitude = 10
 frequency = 0.5
 
-[touch_control]
+[player.keyboard_control]
+max_speed = 30
+acceleration = 300
+
+[player.touch_control]
 max_speed = 60
+acceleration = 300
+
+[touch_control]
 small_radius = 3
 big_radius = 10
 

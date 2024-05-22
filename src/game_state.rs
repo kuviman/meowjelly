@@ -389,11 +389,11 @@ impl GameState {
             let mut transform = mat4::translate(player.pos) * mat4::scale_uniform(player.radius);
             transform *= mat4::rotate_y(Angle::from_degrees(
                 self.ctx.config.player.rotate_angle * player.vel.x
-                    / self.ctx.config.player.max_speed,
+                    / self.ctx.config.player.keyboard_control.max_speed,
             ));
             transform *= mat4::rotate_x(Angle::from_degrees(
                 -self.ctx.config.player.rotate_angle * player.vel.y
-                    / self.ctx.config.player.max_speed,
+                    / self.ctx.config.player.keyboard_control.max_speed,
             ));
             transform *= mat4::rotate_z(Angle::from_degrees(
                 (self.time * f32::PI * 2.0 * self.ctx.config.passive_rotation.frequency).sin()
@@ -719,13 +719,13 @@ impl GameState {
             }
 
             self.wind.set_volume(
-                player.vel.xy().len() / self.ctx.config.player.max_speed
+                player.vel.xy().len() / self.ctx.config.player.keyboard_control.max_speed
                     * self.ctx.config.sfx.wind_move_volume
                     + player.vel.z.abs() / self.ctx.config.player.fall_speed
                         * self.ctx.config.sfx.wind_fall_volume,
             );
             self.swim.set_volume(
-                player.vel.xy().len() / self.ctx.config.player.max_speed
+                player.vel.xy().len() / self.ctx.config.player.keyboard_control.max_speed
                     * self.ctx.config.sfx.swim_volume,
             );
 
@@ -736,9 +736,14 @@ impl GameState {
                 .update(delta_time * player.vel.z.abs() / self.ctx.config.player.fall_speed);
 
             // controls
+            let control_config = if self.touch_control.is_some() {
+                &self.ctx.config.player.touch_control
+            } else {
+                &self.ctx.config.player.keyboard_control
+            };
             let target_vel = if let Some(touch) = &self.touch_control {
                 (touch.move_delta / self.ctx.config.touch_control.small_radius).clamp_len(..=1.0)
-                    * self.ctx.config.touch_control.max_speed
+                    * self.ctx.config.player.touch_control.max_speed
             } else {
                 let mut target_vel = vec2::ZERO;
                 let mut control = |keys: &[geng::Key], x: f32, y: f32| {
@@ -755,7 +760,7 @@ impl GameState {
                     control(&self.ctx.controls.player.down, 0.0, -1.0);
                     control(&self.ctx.controls.player.right, 1.0, 0.0);
                 }
-                target_vel.clamp_len(..=1.0) * self.ctx.config.player.max_speed
+                target_vel.clamp_len(..=1.0) * self.ctx.config.player.keyboard_control.max_speed
             };
             if self.started.is_none() && (target_vel != vec2::ZERO || self.touch_control.is_some())
             {
@@ -765,7 +770,7 @@ impl GameState {
             let target_vel = target_vel * self.started.unwrap_or(0.0).min(1.0);
             assert!(target_vel.x.is_finite());
             player.vel += (target_vel - player.vel.xy())
-                .clamp_len(..=self.ctx.config.player.acceleration * delta_time)
+                .clamp_len(..=control_config.acceleration * delta_time)
                 .extend(0.0);
 
             // gravity
@@ -849,7 +854,7 @@ impl GameState {
 
             player.leg_rot += Angle::from_degrees(
                 self.ctx.config.legs.rotate_speed * player.vel.xy().len()
-                    / self.ctx.config.player.max_speed
+                    / control_config.max_speed
                     * delta_time,
             );
 
