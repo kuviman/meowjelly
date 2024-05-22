@@ -2098,7 +2098,7 @@ dependencies = [
 [[package]]
 name = "geng-sprite-shape"
 version = "0.1.0"
-source = "git+https://github.com/kuviman/sprite-shape#c8ebd30f6e48259900f752e39c210bdf6c40b03a"
+source = "git+https://github.com/kuviman/sprite-shape#b99f805d9c9b7a8d5d040287f1084a4878d8e9e3"
 dependencies = [
  "geng",
  "geng-egui",
@@ -2314,7 +2314,7 @@ dependencies = [
 [[package]]
 name = "glutin"
 version = "0.31.3"
-source = "git+https://github.com/marc2332/glutin?branch=feat/winit-0.30.0#d50f8e32914d64ea5de6f8ed5837fc903237cade"
+source = "git+https://github.com/marc2332/glutin?branch=feat/winit-0.30.0#0ddee1135c05ae1b110da71fed4b9c09b27a31f8"
 dependencies = [
  "bitflags 2.5.0",
  "cfg_aliases 0.1.1",
@@ -2338,7 +2338,7 @@ dependencies = [
 [[package]]
 name = "glutin-winit"
 version = "0.4.2"
-source = "git+https://github.com/marc2332/glutin?branch=feat/winit-0.30.0#d50f8e32914d64ea5de6f8ed5837fc903237cade"
+source = "git+https://github.com/marc2332/glutin?branch=feat/winit-0.30.0#0ddee1135c05ae1b110da71fed4b9c09b27a31f8"
 dependencies = [
  "cfg_aliases 0.1.1",
  "glutin",
@@ -2349,7 +2349,7 @@ dependencies = [
 [[package]]
 name = "glutin_egl_sys"
 version = "0.6.0"
-source = "git+https://github.com/marc2332/glutin?branch=feat/winit-0.30.0#d50f8e32914d64ea5de6f8ed5837fc903237cade"
+source = "git+https://github.com/marc2332/glutin?branch=feat/winit-0.30.0#0ddee1135c05ae1b110da71fed4b9c09b27a31f8"
 dependencies = [
  "gl_generator",
  "windows-sys 0.48.0",
@@ -2358,7 +2358,7 @@ dependencies = [
 [[package]]
 name = "glutin_glx_sys"
 version = "0.5.0"
-source = "git+https://github.com/marc2332/glutin?branch=feat/winit-0.30.0#d50f8e32914d64ea5de6f8ed5837fc903237cade"
+source = "git+https://github.com/marc2332/glutin?branch=feat/winit-0.30.0#0ddee1135c05ae1b110da71fed4b9c09b27a31f8"
 dependencies = [
  "gl_generator",
  "x11-dl",
@@ -2367,7 +2367,7 @@ dependencies = [
 [[package]]
 name = "glutin_wgl_sys"
 version = "0.5.0"
-source = "git+https://github.com/marc2332/glutin?branch=feat/winit-0.30.0#d50f8e32914d64ea5de6f8ed5837fc903237cade"
+source = "git+https://github.com/marc2332/glutin?branch=feat/winit-0.30.0#0ddee1135c05ae1b110da71fed4b9c09b27a31f8"
 dependencies = [
  "gl_generator",
 ]
