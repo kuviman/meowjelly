@@ -15,9 +15,9 @@ use easings::*;
 
 use ctx::Ctx;
 
-async fn run(geng: Geng) {
+async fn run(args: CliArgs, geng: Geng) {
     let ctx = match future::select(
-        Ctx::load(&geng).boxed_local(),
+        Ctx::load(args, &geng).boxed_local(),
         loading::run(&geng).boxed_local(),
     )
     .await
@@ -34,6 +34,8 @@ async fn run(geng: Geng) {
 
 #[derive(clap::Parser)]
 struct CliArgs {
+    #[clap(long)]
+    mobile: Option<bool>,
     #[clap(flatten)]
     geng: geng::CliArgs,
 }
@@ -55,5 +57,5 @@ pub fn main() {
     );
     options.with_cli(&args.geng);
 
-    Geng::run_with(&options, run);
+    Geng::run_with(&options, |geng| run(args, geng));
 }

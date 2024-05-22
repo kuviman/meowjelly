@@ -491,11 +491,11 @@ impl GameState {
         // tutorial
         {
             let alpha = (1.0 - self.started.unwrap_or(0.0)).clamp(0.0, 1.0);
-            for (texture, pos) in [
-                (
-                    &self.ctx.assets.tutorial.touch,
-                    self.ctx.config.tutorial.touch_pos,
-                ),
+            let mobile_tutorial = [(
+                &self.ctx.assets.tutorial.touch,
+                self.ctx.config.tutorial.touch_pos,
+            )];
+            let desktop_tutorial = [
                 (
                     &self.ctx.assets.tutorial.wasd,
                     self.ctx.config.tutorial.wasd_pos,
@@ -504,7 +504,13 @@ impl GameState {
                     &self.ctx.assets.tutorial.arrows,
                     self.ctx.config.tutorial.arrows_pos,
                 ),
-            ] {
+            ];
+            let tutorial: &[_] = if self.ctx.mobile {
+                &mobile_tutorial
+            } else {
+                &desktop_tutorial
+            };
+            for (texture, pos) in tutorial {
                 // let mut pos = pos;
                 // if self.framebuffer_size.aspect() > 1.0 {
                 //     pos = pos.xy().rotate_90().extend(pos.z);
@@ -525,30 +531,26 @@ impl GameState {
         }
         {
             let alpha = self.finished.unwrap_or(0.0);
-            for (texture, pos) in [
-                (&self.ctx.assets.tutorial.r, self.ctx.config.tutorial.r_pos),
+            let (texture, pos) = if self.ctx.mobile {
                 (
                     &self.ctx.assets.tutorial.touch_restart,
                     self.ctx.config.tutorial.touch_restart_pos,
-                ),
-            ] {
-                // let mut pos = pos;
-                // if self.framebuffer_size.aspect() > 1.0 {
-                //     pos = pos.xy().rotate_90().extend(pos.z);
-                // }
-                self.ctx.render.sprite_ext(
-                    framebuffer,
-                    &self.camera,
-                    texture,
-                    mat4::translate(pos.extend(-self.ctx.config.camera.distance) + self.camera.pos)
-                        * mat4::scale(
-                            texture.size().map(|x| x as f32).extend(1.0)
-                                * self.ctx.config.tutorial.final_scale,
-                        ),
-                    Rgba::new(1.0, 1.0, 1.0, alpha),
-                    false,
-                );
-            }
+                )
+            } else {
+                (&self.ctx.assets.tutorial.r, self.ctx.config.tutorial.r_pos)
+            };
+            self.ctx.render.sprite_ext(
+                framebuffer,
+                &self.camera,
+                texture,
+                mat4::translate(pos.extend(-self.ctx.config.camera.distance) + self.camera.pos)
+                    * mat4::scale(
+                        texture.size().map(|x| x as f32).extend(1.0)
+                            * self.ctx.config.tutorial.final_scale,
+                    ),
+                Rgba::new(1.0, 1.0, 1.0, alpha),
+                false,
+            );
         }
 
         self.draw_ui(framebuffer);

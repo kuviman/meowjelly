@@ -2954,9 +2954,11 @@ dependencies = [
 name = "meowjelly"
 version = "1.0.0"
 dependencies = [
+ "cfg-if 1.0.0",
  "geng",
  "geng-sprite-shape",
  "serde",
+ "wasm-bindgen",
  "ysdk",
 ]
 

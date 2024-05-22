@@ -19,6 +19,8 @@ yandex = ["dep:ysdk"]
 opt-level = 2
 
 [dependencies]
+wasm-bindgen = "0.2"
+cfg-if = "1"
 serde = "1"
 geng.workspace = true
 geng-sprite-shape = { git = "https://github.com/kuviman/sprite-shape" }
